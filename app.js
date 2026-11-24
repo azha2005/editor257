@@ -1,6 +1,8 @@
 "use strict";
 
 const $ = id => document.getElementById(id);
+// El empaquetado sella los archivos con ?v=… para que la caché no mezcle datos de dos versiones.
+const assetVersion = new URL(document.currentScript.src).searchParams.get("v") ?? "";
 const number = value => formatInt.format(value);
 const percentage = value => formatDecimal.format(value);
 const pct = value => `${percentage(value)} %`;
@@ -17,12 +19,20 @@ function readMapColors() {
 }
 let colors = readMapColors();
 
-const controls = ["province", "mode", "radio-source", "election", "group", "brush", "map-view", "download", "reset"];
+const controls = ["province", "mode", "radio-source", "election", "group", "brush", "map-view", "download", "reset",
+  "reparto", "camara", "seat-count", "seat-default", "join-apply", "join-amba", "join-clear", "active-district"];
 const displayModes = new Set(["assignment", "unit", "lean", "unassigned"]);
 const pending = new Map();
 const localPlans = new Map();
 const atlases = new Map();
+const bases = new Map();
+const borders = new Map();
 let catalog = new Map();
+let members = ["01"];
+let repartoId = "b257";
+let camara = 257;
+let seatsCustom = null;
+let seatTable = {};
 let plan;
 let election;
 let view = "assignment";
@@ -49,6 +59,10 @@ const map = new MapaDistritos($("canvas"), {
   begin: () => {
     blockedStroke = false;
     plan.begin();
+  },
+  cancel: () => {
+    if (plan.abort()) $("activity").textContent = "Trazo descartado: dos dedos mueven y acercan el mapa.";
+    redraw();
   },
   paint: (indices, type) => {
     let units = indices;
@@ -188,10 +202,15 @@ function setControls(enabled) {
   $("find-unassigned").disabled = !enabled || !plan?.totals[0].units;
   $("undo").disabled = !enabled || !plan?.history.length;
   $("redo").disabled = !enabled || !plan?.future.length;
+  $("camara").disabled = !enabled || !repartoPorId.get(repartoId)?.ajustado;
+  $("seat-default").disabled = !enabled || seatsCustom === null;
+  $("join-clear").disabled = !enabled || members.length === 1;
 }
 
+// Cada número de distritos tiene su propio plan guardado; el de la base conserva la clave original.
 function saveKey(base) {
-  return `distrito257/${base.id}/${base.modo}`;
+  const suffix = base.bancas === base.bancasBase ? "" : `/${base.bancas}`;
+  return `distrito257/${base.id}/${base.modo}${suffix}`;
 }
 
 function restore(base) {
@@ -199,7 +218,7 @@ function restore(base) {
   try {
     const raw = localPlans.get(key) ?? localStorage.getItem(key);
     if (!raw) return null;
-    return PlanDistritos.read(base, JSON.parse(raw));
+    return PlanDistritos.readLocal(base, JSON.parse(raw));
   } catch {
     return null;
   }
@@ -207,7 +226,7 @@ function restore(base) {
 
 function saveChange(message) {
   const key = saveKey(plan.base);
-  const value = JSON.stringify(plan.serialize());
+  const value = JSON.stringify(plan.serializeLocal());
   localPlans.set(key, value);
   try {
     localStorage.setItem(key, value);
@@ -223,9 +242,112 @@ function saveChange(message) {
 
 window.recibirBase = base => pending.get(`${base.id}-${base.modo}`)?.(base);
 window.recibirLocales = atlas => pending.get(`${atlas.id}-locales`)?.(atlas);
+window.recibirFronteras = data => pending.get(`fronteras-${data.modo}`)?.(data);
 
-function getBase(id, mode) {
+async function getBase(id, mode) {
   const key = `${id}-${mode}`;
+  if (!bases.has(key)) {
+    const base = await getScript(key);
+    base.bancasBase = base.bancas;
+    base.geolocalizados = catalog.get(id).geolocalizados;
+    bases.set(key, base);
+  }
+  return bases.get(key);
+}
+
+async function getBorders(mode) {
+  if (!borders.has(mode)) borders.set(mode, (await getScript(`fronteras-${mode}`)).pares);
+  return borders.get(mode);
+}
+
+// Unión de listas por nombre: cada jurisdicción trae su propio orden de fuerzas.
+function mergeElections(lists) {
+  const ids = lists[0].map(item => item.id).filter(id => lists.every(list => list.some(item => item.id === id)));
+  const maps = lists.map(() => []);
+  const elecciones = [];
+  let width = 0;
+  for (const id of ids) {
+    const found = lists.map(list => list.find(item => item.id === id));
+    const names = [];
+    const tints = [];
+    found.forEach(item => item.partidos.forEach((name, i) => {
+      if (!names.includes(name)) { names.push(name); tints.push(item.colores?.[i]); }
+    }));
+    found.forEach((item, m) => item.partidos.forEach((name, i) => {
+      maps[m][item.desde + i] = width + names.indexOf(name);
+    }));
+    const {colores, ...rest} = found[0];
+    elecciones.push({...rest, desde: width, partidos: names, ...(tints.some(Boolean) ? {colores: tints} : {})});
+    width += names.length;
+  }
+  return {elecciones, maps, width};
+}
+
+function remapVotes(row, map, width) {
+  if (!row) return row;
+  const out = new Array(width).fill(0);
+  row.forEach((votes, i) => { if (map[i] !== undefined) out[map[i]] += votes; });
+  return out;
+}
+
+const earthRadius = 6378137;
+
+function mergeBases(list, pairs) {
+  const left = Math.min(...list.map(base => base.origen[0]));
+  const top = Math.max(...list.map(base => base.origen[1]));
+  const merged = mergeElections(list.map(base => base.elecciones));
+  const total = list.reduce((sum, base) => sum + base.unidades.length, 0);
+  const unidades = [], vecinos = [], partesExtra = [], pieces = new Map();
+  let units = 0, extras = 0, districts = 0, ancho = 0, alto = 0;
+  list.forEach((base, m) => {
+    const dx = Math.round(base.origen[0] - left), dy = Math.round(top - base.origen[1]);
+    const n = base.unidades.length, u0 = units, e0 = extras, d0 = districts;
+    const piece = i => i < n ? u0 + i : total + e0 + i - n;
+    for (const unit of base.unidades) {
+      unidades.push([unit[0], unit[1], unit[2], unit[3] ? unit[3] + d0 : 0,
+        remapVotes(unit[4], merged.maps[m], merged.width),
+        unit[5].map(ring => ring.map((value, k) => value + (k % 2 ? dy : dx))), unit[6]]);
+    }
+    for (const value of base.vecinos) vecinos.push(piece(value));
+    for (const owner of base.partesExtra ?? []) partesExtra.push(owner + u0);
+    pieces.set(base.id, piece);
+    units += n;
+    extras += (base.partesExtra ?? []).length;
+    districts += base.bancas;
+    ancho = Math.max(ancho, dx + base.ancho);
+    alto = Math.max(alto, dy + base.alto);
+  });
+  for (let i = 0; i < pairs.length; i += 4) {
+    const a = pieces.get(pairs[i]), b = pieces.get(pairs[i + 2]);
+    if (a && b) vecinos.push(a(pairs[i + 1]), b(pairs[i + 3]));
+  }
+  const middle = 2 * Math.atan(Math.exp((top - alto / 2) / earthRadius)) - Math.PI / 2;
+  return {
+    id: list.map(base => base.id).join("+"), modo: list[0].modo, nombre: unionName(list.map(base => base.id)),
+    bancas: districts, bancasBase: districts, version: list.map(base => base.version).join("+"),
+    origen: [left, top], ancho, alto, escala: Math.cos(middle), elecciones: merged.elecciones,
+    unidades, vecinos, partesExtra,
+    geolocalizados: list.reduce((sum, base) => sum + base.geolocalizados, 0)
+  };
+}
+
+function unionName(ids) {
+  if (ids.length === 1) return catalog.get(ids[0]).nombre;
+  return ids.map(id => id === "01" ? "CABA" : catalog.get(id).nombre).join(" + ");
+}
+
+async function getJurisdiction(ids, mode) {
+  if (ids.length === 1) return getBase(ids[0], mode);
+  const key = `${ids.join("+")}-${mode}`;
+  if (!bases.has(key)) {
+    const list = [];
+    for (const id of ids) list.push(await getBase(id, mode));
+    bases.set(key, mergeBases(list, await getBorders(mode)));
+  }
+  return bases.get(key);
+}
+
+function getScript(key) {
   return new Promise((resolve, reject) => {
     const script = make("script");
     const clean = () => {
@@ -243,16 +365,38 @@ function getBase(id, mode) {
         reject(new Error("La capa no se pudo leer."));
       }
     }, {once: true});
-    script.src = `datos/${key}.js`;
+    script.src = `datos/${key}.js?v=${assetVersion}`;
     document.head.append(script);
   });
 }
 
-async function getAtlas(id) {
-  if (!catalog.get(id).geolocalizados) return null;
-  if (!atlases.has(id)) atlases.set(id, await getBase(id, "locales"));
-  return atlases.get(id);
+async function getAtlas(ids) {
+  const key = ids.join("+");
+  if (atlases.has(key)) return atlases.get(key);
+  const list = [];
+  for (const id of ids) {
+    if (!catalog.get(id).geolocalizados) continue;
+    if (!atlases.has(id)) atlases.set(id, await getScript(`${id}-locales`));
+    list.push(atlases.get(id));
+  }
+  if (ids.length === 1 || !list.length) return list[0] ?? null;
+  const merged = mergeElections(list.map(atlas => atlas.elecciones));
+  const votos = {};
+  list.forEach((atlas, m) => {
+    for (const [code, row] of Object.entries(atlas.votos)) votos[code] = remapVotes(row, merged.maps[m], merged.width);
+  });
+  atlases.set(key, {id: key, elecciones: merged.elecciones, votos});
+  return atlases.get(key);
 }
+
+// Bancas de cada jurisdicción según el reparto elegido; una unión suma las de sus miembros.
+function computeSeats() {
+  const regla = repartoPorId.get(repartoId);
+  const poblacion = Object.fromEntries([...catalog.values()].map(item => [item.id, item.poblacion]));
+  seatTable = repartir(regla, poblacion, camara);
+}
+
+const defaultSeats = ids => ids.reduce((sum, id) => sum + seatTable[id], 0);
 
 function updateElection(previous) {
   const alternatives = plan.elections;
@@ -261,32 +405,52 @@ function updateElection(previous) {
   $("election").value = election.id;
 }
 
-async function load(id, mode, savedPlan = null) {
-  if (switching || !catalog.has(id) || !["radios", "circuitos"].includes(mode)) return;
+function showJurisdiction(ids) {
+  const select = $("province");
+  select.querySelector("option[data-union]")?.remove();
+  if (ids.length > 1) {
+    const option = new Option(unionName(ids), ids.join("+"));
+    option.dataset.union = "";
+    select.prepend(option);
+  }
+  select.value = ids.join("+");
+  document.querySelectorAll("#join-list input").forEach(box => { box.checked = ids.includes(box.value); });
+}
+
+// Unidades de la jurisdicción (o unión), con la cantidad de distritos fijada por el reparto o a mano.
+// Solo hay plan de partida cuando la cantidad coincide con la de la base del proyecto.
+async function load(ids, mode, savedPlan = null) {
+  ids = [...new Set(ids)].sort();
+  if (switching || !ids.length || !ids.every(id => catalog.has(id)) || !["radios", "circuitos"].includes(mode)) return;
   if (map.gesture) return;
   switching = true;
   setControls(false);
   $("map-message").hidden = false;
-  $("map-message").textContent = `Cargando ${catalog.get(id).nombre}…`;
+  $("map-message").textContent = `Cargando ${unionName(ids)}…`;
   try {
-    const base = plan?.base.id === id && plan.base.modo === mode ? plan.base : await getBase(id, mode);
+    const source = await getJurisdiction(ids, mode);
+    const wanted = Math.round(seatsCustom ?? defaultSeats(ids));
+    const seats = Math.max(1, Math.min(wanted, source.unidades.length, 9999));
+    const base = seats === source.bancas ? source : {...source, bancas: seats};
+    const initial = seats === source.bancasBase ? null : new Uint16Array(source.unidades.length);
     const imported = savedPlan ? PlanDistritos.read(base, savedPlan) : null;
-    if (imported && plan?.base === base) {
+    if (imported && plan && saveKey(plan.base) === saveKey(base)) {
       plan.importAssignments(imported);
       saveChange("Plan abierto. Podés deshacer el cambio.");
       $("map-message").hidden = true;
-      return;
+      return true;
     }
     const stored = restore(base);
     const previous = election?.id;
     const method = mode === "radios" ? voteMethod : "circuit";
-    const atlas = method === "geo" ? await getAtlas(id) : null;
-    const next = new PlanDistritos(base, stored, method, atlas);
+    const atlas = method === "geo" ? await getAtlas(ids) : null;
+    const next = new PlanDistritos(base, stored, method, atlas, initial);
     if (imported) next.importAssignments(imported);
     plan = next;
+    members = ids;
     active = 1;
     page = 0;
-    $("province").value = id;
+    showJurisdiction(ids);
     $("mode").value = mode;
     $("radio-source-label").hidden = mode !== "radios";
     $("radio-source").value = voteMethod;
@@ -302,23 +466,26 @@ async function load(id, mode, savedPlan = null) {
     $("map-layer").textContent = `${number(plan.units.length)} ${kind}`;
     $("map-message").hidden = true;
     $("activity").textContent = "Elegí un distrito y pintá en el mapa.";
-    $("save-status").textContent = stored ? "Plan recuperado" : "Base del proyecto";
+    $("save-status").textContent = stored ? "Plan recuperado" : initial ? "Plan en blanco" : "Base del proyecto";
     displayCompleteResults = false;
     makeRows();
     refreshView();
     map.show(plan);
     if (imported) saveChange("Plan abierto y guardado en este navegador.");
     redraw();
+    paintApportion();
     setLocation();
+    return true;
   } catch (error) {
     if (plan) {
-      $("province").value = plan.base.id;
+      showJurisdiction(members);
       $("mode").value = plan.base.modo;
       $("map-message").hidden = true;
     } else {
       $("map-message").textContent = error.message;
     }
     $("activity").textContent = error.message;
+    return false;
   } finally {
     switching = false;
     setControls(Boolean(plan));
@@ -331,12 +498,16 @@ function setLocation() {
   const fragment = new URLSearchParams({
     provincia: plan.base.id, unidad: plan.base.modo, eleccion: election.id, vista: view, estimacion: voteMethod
   });
+  if (repartoId !== "b257") fragment.set("reparto", repartoId);
+  if (camara !== 257 && repartoPorId.get(repartoId).ajustado) fragment.set("camara", camara);
+  if (seatsCustom !== null) fragment.set("distritos", plan.base.bancas);
   try { history.replaceState(null, "", `#${fragment}`); }
   catch { /* El origen file:// puede restringir el historial. */ }
 }
 
 function chooseDistrict(district) {
   active = district;
+  $("active-district").value = district;
   page = Math.floor((district - 1) / pageSize);
   displayCompleteResults = false;
   redraw();
@@ -365,6 +536,8 @@ function makeRows() {
     rows.push({tr, button, swatch, lock, pop, dev});
   }
   $("districts").replaceChildren(fragment);
+  $("active-district").replaceChildren(...rows.map((_, i) => new Option(districtName(i + 1), i + 1)));
+  $("active-district").value = active;
 }
 
 function paintRows() {
@@ -402,7 +575,7 @@ function paintSummary() {
     `${number(plan.population)} habitantes en el plan`;
   $("vote-coverage").hidden = plan.base.modo !== "radios";
   if (plan.method === "geo") {
-    const n = catalog.get(plan.base.id).geolocalizados;
+    const n = plan.base.geolocalizados;
     $("vote-coverage").textContent = n ?
       `${election.metodo}: ${number(n)} de ${number(plan.units.length)} radios con estimación.` :
       "Sin estimación geolocalizada en esta jurisdicción.";
@@ -558,8 +731,104 @@ function download() {
   $("activity").textContent = "Plan exportado como JSON";
 }
 
-$("province").addEventListener("change", () => load($("province").value, $("mode").value));
-$("mode").addEventListener("change", () => load($("province").value, $("mode").value));
+function buildApportionControls(data) {
+  $("reparto").replaceChildren(...REPARTOS.map(item => new Option(item.nombre, item.id)));
+  $("join-list").replaceChildren(...data.map(item => {
+    const label = make("label");
+    const box = make("input");
+    box.type = "checkbox";
+    box.value = item.id;
+    label.append(box, document.createTextNode(item.nombre));
+    return label;
+  }));
+}
+
+function paintApportion() {
+  const regla = repartoPorId.get(repartoId);
+  const total = Object.values(seatTable).reduce((sum, n) => sum + n, 0);
+  $("reparto").value = repartoId;
+  $("camara").value = total;
+  $("camara").disabled = switching || !regla.ajustado;
+  const poblacion = Object.fromEntries([...catalog.values()].map(item => [item.id, item.poblacion]));
+  $("camara").min = minimoDeCamara(regla, poblacion) ?? 1;
+  const own = defaultSeats(members);
+  $("seat-count").value = plan.base.bancas;
+  $("seat-count").max = Math.min(9999, plan.units.length);
+  $("seat-default").disabled = switching || seatsCustom === null;
+  $("seat-default").textContent = `Usar el reparto (${number(own)})`;
+  $("join-clear").disabled = switching || members.length === 1;
+  const custom = seatsCustom === null ? "" : ` · ${number(plan.base.bancas)} distritos a mano`;
+  $("apportion-summary").textContent = `${regla.nombre} · Cámara de ${number(total)}${custom}`;
+  const minimum = $("camara").min > 1 ? ` Mínimo de la Cámara con estas reglas: ${number($("camara").min)}.` : "";
+  $("reparto-detail").textContent = regla.detalle + minimum +
+    (plan.base.bancas === plan.base.bancasBase ? "" : " Con este número de distritos no hay plan de partida: el mapa arranca vacío.");
+  const cells = [...catalog.values()].map(item => {
+    const cell = make("div", "", members.includes(item.id) ? "member" : "");
+    cell.append(make("span", item.nombre), make("span", number(seatTable[item.id])));
+    return cell;
+  });
+  const sum = make("div", "", "total");
+  sum.append(make("span", "Total"), make("span", number(total)));
+  $("reparto-table").replaceChildren(...cells, sum);
+}
+
+// Un cambio de reparto recarga solo si cambia la cantidad de distritos de lo que está abierto.
+function applySeats() {
+  if (!plan) return;
+  const wanted = seatsCustom ?? defaultSeats(members);
+  if (wanted !== plan.base.bancas) load(members, plan.base.modo);
+  else { paintApportion(); setLocation(); }
+}
+
+$("reparto").addEventListener("change", () => {
+  if (switching || !repartoPorId.has($("reparto").value)) return;
+  const previous = repartoId;
+  repartoId = $("reparto").value;
+  try { computeSeats(); }
+  catch {
+    const regla = repartoPorId.get(repartoId);
+    const poblacion = Object.fromEntries([...catalog.values()].map(item => [item.id, item.poblacion]));
+    camara = minimoDeCamara(regla, poblacion) ?? camara;
+    try { computeSeats(); } catch { repartoId = previous; computeSeats(); }
+  }
+  applySeats();
+});
+$("camara").addEventListener("change", () => {
+  const value = Math.round(Number($("camara").value));
+  const previous = camara;
+  if (!Number.isFinite(value) || value < 1 || value > 5000) { paintApportion(); return; }
+  camara = value;
+  try { computeSeats(); }
+  catch (error) {
+    camara = previous;
+    computeSeats();
+    $("activity").textContent = error.message;
+  }
+  applySeats();
+});
+$("seat-count").addEventListener("change", () => {
+  const value = Math.round(Number($("seat-count").value));
+  if (!plan || !Number.isFinite(value) || value < 1) { if (plan) paintApportion(); return; }
+  seatsCustom = value === defaultSeats(members) ? null : value;
+  applySeats();
+});
+$("seat-default").addEventListener("click", () => { seatsCustom = null; applySeats(); });
+$("join-apply").addEventListener("click", () => {
+  const ids = [...document.querySelectorAll("#join-list input:checked")].map(box => box.value);
+  if (!ids.length) { $("activity").textContent = "Marcá al menos una jurisdicción."; return; }
+  seatsCustom = null;
+  load(ids, plan?.base.modo ?? "radios");
+});
+$("join-amba").addEventListener("click", () => { seatsCustom = null; load(["01", "02"], plan?.base.modo ?? "radios"); });
+$("join-clear").addEventListener("click", () => { seatsCustom = null; load([members[0]], plan?.base.modo ?? "radios"); });
+$("active-district").addEventListener("change", () => chooseDistrict(Number($("active-district").value)));
+
+$("province").addEventListener("change", () => {
+  const ids = $("province").value.split("+");
+  if (ids.join("+") !== members.join("+")) seatsCustom = null;
+  load(ids, $("mode").value);
+});
+$("mode").addEventListener("change", () => load(members, $("mode").value));
 $("radio-source").addEventListener("change", async () => {
   if (switching || !plan || map.gesture) return;
   const next = $("radio-source").value;
@@ -569,7 +838,7 @@ $("radio-source").addEventListener("change", async () => {
   $("map-message").hidden = false;
   $("map-message").textContent = "Cargando la estimación…";
   try {
-    const atlas = next === "geo" ? await getAtlas(plan.base.id) : null;
+    const atlas = next === "geo" ? await getAtlas(members) : null;
     plan.useVotes(next, atlas);
     voteMethod = next;
     updateElection(election.id);
@@ -632,6 +901,7 @@ $("find-unassigned").addEventListener("click", () => {
 });
 $("reset").addEventListener("click", () => {
   $("reset-dialog").returnValue = "cancel";
+  $("reset-dialog").querySelector("button[value='initial']").hidden = !plan?.initial.some(Boolean);
   $("reset-dialog").showModal();
 });
 $("reset-dialog").addEventListener("close", () => {
@@ -652,9 +922,12 @@ $("file").addEventListener("change", async () => {
   if (!file) return;
   try {
     const saved = JSON.parse(await file.text());
-    if (saved?.formato !== "257-plan-local-v1" || !catalog.has(saved.jurisdiccion) ||
-        !["radios", "circuitos"].includes(saved.unidad)) throw new Error();
-    await load(saved.jurisdiccion, saved.unidad, saved);
+    const ids = typeof saved?.jurisdiccion === "string" ? saved.jurisdiccion.split("+") : [];
+    if (saved?.formato !== "257-plan-local-v1" || !ids.length || !ids.every(id => catalog.has(id)) ||
+        !["radios", "circuitos"].includes(saved.unidad) || !Number.isInteger(saved.bancas)) throw new Error();
+    const previous = seatsCustom;
+    seatsCustom = saved.bancas === defaultSeats(ids) ? null : saved.bancas;
+    if (!await load(ids, saved.unidad, saved)) seatsCustom = previous;
   } catch {
     $("activity").textContent = "El archivo no es un plan de Distrito 257.";
   }
@@ -673,12 +946,20 @@ document.addEventListener("keydown", event => {
 window.recibirCatalogo = data => {
   catalog = new Map(data.map(item => [item.id, item]));
   $("province").replaceChildren(...data.map(item => new Option(item.nombre, item.id)));
+  buildApportionControls(data);
   const location = new URLSearchParams(window.location.hash.slice(1));
-  const id = catalog.has(location.get("provincia")) ? location.get("provincia") : "01";
+  const requested = (location.get("provincia") ?? "").split("+");
+  const ids = requested.every(id => catalog.has(id)) ? requested : ["01"];
   const mode = location.get("unidad") === "circuitos" ? "circuitos" : "radios";
+  if (repartoPorId.has(location.get("reparto"))) repartoId = location.get("reparto");
+  const chamber = Number(location.get("camara"));
+  if (Number.isInteger(chamber) && chamber > 0) camara = chamber;
+  try { computeSeats(); } catch { camara = 257; repartoId = "b257"; computeSeats(); }
+  const custom = Number(location.get("distritos"));
+  if (Number.isInteger(custom) && custom > 0 && custom !== defaultSeats(ids)) seatsCustom = custom;
   const requestedView = location.get("vista");
   view = displayModes.has(requestedView) ? requestedView : "assignment";
   voteMethod = location.get("estimacion") === "circuit" ? "circuit" : "geo";
   election = {id: location.get("eleccion")};
-  load(id, mode);
+  load(ids, mode);
 };

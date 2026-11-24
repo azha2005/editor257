@@ -3,7 +3,7 @@
 const voteEpsilon = 1e-8;
 
 class PlanDistritos {
-  constructor(base, saved = null, method = "circuit", atlas = null) {
+  constructor(base, saved = null, method = "circuit", atlas = null, initial = null) {
     this.base = base;
     this.units = base.unidades;
     this.index = new Map(this.units.map((unit, i) => [unit[0], i]));
@@ -18,7 +18,7 @@ class PlanDistritos {
       this.neighbors[a].push(b);
       this.neighbors[b].push(a);
     }
-    this.districts = new Uint16Array(this.units.map(unit => unit[3]));
+    this.districts = initial ? Uint16Array.from(initial) : new Uint16Array(this.units.map(unit => unit[3]));
     this.initial = this.districts.slice();
     if (saved) this.districts.set(saved.assignments);
     this.locked = new Set(saved?.locked);
@@ -107,6 +107,15 @@ class PlanDistritos {
     return changes.length;
   }
 
+  // Descarta el trazo en curso sin dejarlo en el historial (un segundo dedo pasa a mover el mapa).
+  abort() {
+    if (!this.stroke) return 0;
+    const changes = [...this.stroke.values()];
+    this.stroke = null;
+    changes.forEach(item => this.assign(item.index, item.before));
+    return changes.length;
+  }
+
   undo() {
     const changes = this.history.at(-1);
     if (!changes) return 0;
@@ -184,6 +193,18 @@ class PlanDistritos {
       bloqueados: [...this.locked].sort((a, b) => a - b),
       asignaciones: this.units.map((unit, i) => [unit[0], this.districts[i]])
     };
+  }
+
+  // Copia local compacta: el orden de las unidades lo fija la versión de la base.
+  serializeLocal() {
+    const {asignaciones, ...rest} = this.serialize();
+    return {...rest, valores: Array.from(this.districts)};
+  }
+
+  static readLocal(base, stored) {
+    if (!Array.isArray(stored?.valores)) return PlanDistritos.read(base, stored);
+    const asignaciones = base.unidades.map((unit, i) => [unit[0], stored.valores[i]]);
+    return PlanDistritos.read(base, {...stored, asignaciones});
   }
 
   static read(base, document) {

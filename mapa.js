@@ -19,6 +19,7 @@ class MapaDistritos {
     this.gesture = null;
     this.frame = 0;
     this.hoverIndex = -1;
+    this.touches = new Map();
     this.resize = new ResizeObserver(() => this.resizeToCanvas());
     this.resize.observe(canvas);
     canvas.addEventListener("pointerdown", event => this.pointerDown(event));
@@ -246,13 +247,22 @@ class MapaDistritos {
   }
 
   pointerDown(event) {
-    if (!this.plan || !this.events.enabled() || this.gesture ||
-        (event.button !== 0 && event.button !== 1)) return;
+    if (!this.plan || !this.events.enabled()) return;
+    if (event.pointerType === "touch") {
+      this.touches.set(event.pointerId, this.point(event));
+      if (this.touches.size === 2) {
+        this.startPinch();
+        event.preventDefault();
+        return;
+      }
+      if (this.touches.size > 2) return;
+    }
+    if (this.gesture || (event.button !== 0 && event.button !== 1)) return;
     const p = this.point(event);
     const tool = event.button === 1 ? "pan" : this.events.tool();
     this.gesture = {id: event.pointerId, tool, p, origin: p, seen: new Set()};
     this.canvas.focus({preventScroll: true});
-    this.canvas.setPointerCapture(event.pointerId);
+    try { this.canvas.setPointerCapture(event.pointerId); } catch { /* puntero sintético */ }
     if (tool !== "pan") {
       this.events.begin();
       this.paint(...p);
@@ -261,10 +271,42 @@ class MapaDistritos {
     event.preventDefault();
   }
 
+  // Dos dedos: zoom y desplazamiento. Si el primero ya había empezado a pintar, el trazo se descarta.
+  startPinch() {
+    const g = this.gesture;
+    if (g && g.tool !== "pan" && g.tool !== "pinch") this.events.cancel();
+    const [a, b] = [...this.touches.values()];
+    this.gesture = {
+      tool: "pinch", ids: [...this.touches.keys()], distance: Math.max(1, Math.hypot(a[0] - b[0], a[1] - b[1])),
+      middle: [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2], camera: {...this.camera}
+    };
+    this.fittedDistrict = undefined;
+    this.hover(-1);
+    this.canvas.classList.add("dragging");
+  }
+
+  pinch() {
+    const g = this.gesture;
+    const [a, b] = g.ids.map(id => this.touches.get(id));
+    if (!a || !b) return;
+    const middle = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+    const factor = Math.hypot(a[0] - b[0], a[1] - b[1]) / g.distance;
+    const z = Math.max(this.baseScale * .28, Math.min(this.baseScale * 420, g.camera.z * factor));
+    const worldX = (g.middle[0] - g.camera.x) / g.camera.z;
+    const worldY = (g.middle[1] - g.camera.y) / g.camera.z;
+    this.camera = {x: middle[0] - worldX * z, y: middle[1] - worldY * z, z};
+    this.request();
+  }
+
   pointerMove(event) {
     if (!this.plan) return;
     const p = this.point(event);
+    if (this.touches.has(event.pointerId)) this.touches.set(event.pointerId, p);
     const g = this.gesture;
+    if (g?.tool === "pinch") {
+      if (g.ids.includes(event.pointerId)) this.pinch();
+      return;
+    }
     if (!g) {
       this.hover(this.hit(...p));
       return;
@@ -309,7 +351,15 @@ class MapaDistritos {
   }
 
   pointerEnd(event) {
+    this.touches.delete(event.pointerId);
     const g = this.gesture;
+    if (g?.tool === "pinch") {
+      if (g.ids.includes(event.pointerId)) {
+        this.gesture = null;
+        this.canvas.classList.remove("dragging");
+      }
+      return;
+    }
     if (!g || g.id !== event.pointerId) return;
     this.gesture = null;
     if (g.tool === "pan") {

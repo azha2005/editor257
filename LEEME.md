@@ -28,6 +28,39 @@ y el listado se actualiza al terminar cada trazo. Elegí un distrito de la
 lista para ubicarlo en el mapa. El botón **Claro** / **Oscuro** cambia
 el tema y recuerda la elección en el navegador.
 
+**Reparto y uniones**, debajo de los selectores, cambia cuántos distritos
+tiene cada jurisdicción. Los repartos siguen la Ley 22.847 («ley Bignone»)
+con el Censo 2022: un diputado cada 161.000 habitantes o fracción de 80.500,
+más 3 por distrito, piso de 5 y garantía de las bancas de 1983.
+
+- **Bignone actualizado, sin garantía** (el de partida): cociente ajustado
+  para que la Cámara sume el total pedido, con +3 y piso de 5.
+- **Bignone actualizado, con garantía**: además, nadie baja de sus bancas de 1983.
+- **Bignone literal con el censo 2022**: cociente fijo de 161.000; la Cámara
+  pasa a 361.
+- **Reparto vigente (1983)**: las bancas de hoy.
+- **Bignone sin piso**: cociente ajustado y +3, sin piso de 5 ni garantía.
+- **Proporcional puro**: Webster sobre el censo, sin +3, piso ni garantía,
+  con al menos un distrito por jurisdicción.
+
+Las variantes ajustadas aceptan otro tamaño de Cámara. También se puede fijar
+a mano el número de distritos de la jurisdicción abierta. Cada número de
+distritos guarda su propio plan; solo el de la base del proyecto arranca
+dibujado, los demás arrancan vacíos.
+
+**Unir jurisdicciones** abre varias en un solo mapa, por ejemplo CABA y
+Buenos Aires, con distritos que pueden cruzar el límite. La unión recibe la
+suma de las bancas de sus miembros y la población ideal es el promedio de
+toda la unión. Las fuerzas se unen por nombre. Entre jurisdicciones son
+vecinas las piezas a menos de unos 20 m con al menos 30 m de borde en común:
+las capas provinciales no comparten vértices exactos en la General Paz y el
+Riachuelo.
+
+En pantallas táctiles, un dedo pinta (o mueve, con **Mover**) y dos dedos
+acercan y desplazan el mapa; si el primer dedo ya había empezado a pintar,
+ese trazo se descarta. El selector **Distrito** junto a las herramientas
+elige el distrito activo sin bajar hasta la lista.
+
 En **Color del mapa**, **Voto por unidad** colorea los radios o circuitos
 según su propio resultado. **Lean del plan** usa ese voto como fondo para
 las unidades sin asignar y el resultado acumulado para las asignadas.

@@ -11,7 +11,7 @@
     document.documentElement.dataset.theme = ["light", "dark"].includes(storedTheme) ? storedTheme :
       (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
   </script>
-  <link rel="stylesheet" href="estilo.css">
+  <link rel="stylesheet" href="estilo.css?v=40f2b43cf7">
 </head>
 <body>
   <div class="shell">
@@ -49,6 +49,30 @@
         <dl class="quota"><dt>Distritos del plan</dt><dd id="seats">…</dd></dl>
       </section>
 
+      <details id="apportion" class="apportion">
+        <summary><strong>Reparto y uniones</strong> <span id="apportion-summary"></span></summary>
+        <div class="apportion-body">
+          <div class="apportion-fields">
+            <label>Reparto entre jurisdicciones<select id="reparto" disabled></select></label>
+            <label>Bancas de la Cámara<input id="camara" type="number" inputmode="numeric" min="1" step="1" disabled></label>
+            <label>Distritos de esta jurisdicción<input id="seat-count" type="number" inputmode="numeric" min="1" step="1" disabled></label>
+            <button id="seat-default" type="button" disabled>Usar el reparto</button>
+          </div>
+          <p id="reparto-detail" class="result-note"></p>
+          <fieldset class="join">
+            <legend>Unir jurisdicciones en un solo mapa</legend>
+            <p class="result-note">Los distritos pueden cruzar el límite entre jurisdicciones. La unión recibe la suma de sus bancas.</p>
+            <div id="join-list" class="join-list"></div>
+            <div class="join-actions">
+              <button id="join-amba" type="button" disabled>CABA + Buenos Aires</button>
+              <button id="join-clear" type="button" disabled>Separar</button>
+              <button id="join-apply" type="button" class="primary" disabled>Unir las marcadas</button>
+            </div>
+          </fieldset>
+          <div id="reparto-table" class="reparto-table" aria-label="Bancas por jurisdicción"></div>
+        </div>
+      </details>
+
       <div class="workbench">
         <section class="map-panel" aria-label="Mapa editable">
           <div class="tools" role="toolbar" aria-label="Herramientas de dibujo">
@@ -75,6 +99,9 @@
                 <option value="lean">Lean del plan</option>
                 <option value="unassigned">Sin asignar</option>
               </select>
+            </label>
+            <label class="tool-cluster mobile-district">Distrito
+              <select id="active-district" aria-label="Distrito activo" disabled></select>
             </label>
             <div class="tool-cluster history">
               <button id="undo" type="button" title="Deshacer (Ctrl+Z)" disabled>Deshacer</button>
@@ -150,7 +177,8 @@
         <p><a href="control_pba.json">Control de cobertura y totales de Buenos Aires</a>. La opción Reparto por circuito distribuye en proporción a la población y cubre el país.</p>
         <p>El modo de circuitos usa población estimada según el padrón y votos observados para Diputados 2025 donde la base tiene cobertura. Para 2023 se usan datos adaptados a los circuitos de 2025.</p>
         <p>El desvío se destaca cuando supera el 2 %. La contigüidad se comprueba por segmentos de borde compartidos entre polígonos. Las islas separadas cuentan como fragmentos. El pincel de circuito en modo radios usa el vínculo aproximado de la base entre radio y circuito.</p>
-        <p><kbd>V</kbd> mover, <kbd>P</kbd> pintar, <kbd>E</kbd> borrar, <kbd>Ctrl</kbd> + <kbd>Z</kbd> deshacer. La rueda acerca o aleja y el botón central arrastra el mapa.</p>
+        <p>El reparto de las bancas sigue la Ley 22.847 con el Censo 2022: un diputado cada 161.000 habitantes o fracción de 80.500, más 3 por distrito, piso de 5 y garantía de las bancas de 1983. Las variantes ajustadas buscan el cociente que deja la Cámara en el total pedido (método de Webster). Cada número de distritos guarda su propio plan; solo el de la base del proyecto arranca con distritos dibujados.</p>
+        <p><kbd>V</kbd> mover, <kbd>P</kbd> pintar, <kbd>E</kbd> borrar, <kbd>Ctrl</kbd> + <kbd>Z</kbd> deshacer. La rueda acerca o aleja y el botón central arrastra el mapa. En pantallas táctiles, dos dedos acercan y mueven el mapa.</p>
       </details>
       <noscript>Activá JavaScript para cargar los datos locales y editar el mapa.</noscript>
     </main>
@@ -166,11 +194,12 @@
       </div>
     </form>
   </dialog>
-  <script src="plan.js" defer></script>
-  <script src="mapa.js" defer></script>
-  <script src="lean.js" defer></script>
-  <script src="datos/colores.js" defer></script>
-  <script src="app.js" defer></script>
-  <script src="datos/catalogo.js" defer></script>
+  <script src="plan.js?v=40f2b43cf7" defer></script>
+  <script src="mapa.js?v=40f2b43cf7" defer></script>
+  <script src="lean.js?v=40f2b43cf7" defer></script>
+  <script src="reparto.js?v=40f2b43cf7" defer></script>
+  <script src="datos/colores.js?v=40f2b43cf7" defer></script>
+  <script src="app.js?v=40f2b43cf7" defer></script>
+  <script src="datos/catalogo.js?v=40f2b43cf7" defer></script>
 </body>
 </html>

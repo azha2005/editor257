@@ -210,6 +210,32 @@ dialog { border: 1px solid var(--edge); border-radius: var(--radius); color: var
 dialog::backdrop { background: var(--shadow); }
 dialog p { margin-block: 8px 20px; color: var(--muted); }
 .dialog-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.apportion { border: 1px solid var(--rule); border-radius: var(--radius); background: var(--surface); margin-bottom: 12px; }
+.apportion > summary { padding: 8px 12px; font-size: 13px; }
+#apportion-summary { color: var(--muted); margin-left: 4px; }
+.apportion-body { padding: 4px 12px 12px; display: grid; gap: 8px; }
+.apportion-fields { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, .7fr) minmax(0, .8fr) max-content; gap: 8px 16px; align-items: end; }
+.apportion-fields label { display: grid; gap: 4px; font-size: 12px; color: var(--muted); }
+.apportion-fields select { width: 100%; color: var(--ink); }
+input[type="number"] {
+  font: inherit; color: var(--ink); min-height: 36px; width: 100%; padding: 4px 8px;
+  border: 1px solid var(--field-edge); border-radius: var(--radius); background: var(--surface);
+  font-variant-numeric: tabular-nums;
+}
+input[type="number"]:disabled { background: var(--paper); color: var(--disabled); }
+.join { border: 1px solid var(--rule); border-radius: var(--radius); padding: 8px 12px; margin: 0; min-width: 0; }
+.join legend { font-size: 12px; font-weight: 650; padding: 0 4px; }
+.join-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 2px 12px; margin: 8px 0; font-size: 12px; }
+.join-list label { display: flex; align-items: center; gap: 4px; min-height: 26px; }
+.join-list input { accent-color: var(--accent); }
+.join-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+.join-actions button { font-size: 12px; }
+.reparto-table { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0 16px; font-size: 12px; font-variant-numeric: tabular-nums; }
+.reparto-table div { display: flex; justify-content: space-between; gap: 8px; padding: 2px 0; border-bottom: 1px solid var(--rule); }
+.reparto-table .member { color: var(--selected); font-weight: 700; }
+.reparto-table .total { font-weight: 700; border-bottom: 0; }
+.mobile-district { display: none; font-size: 12px; color: var(--muted); }
+.mobile-district select { color: var(--ink); font-size: 14px; max-width: 150px; }
 @media (max-width: 1000px) {
   .shell { padding-inline: 16px; }
   .history { margin-left: 0; }
@@ -235,6 +261,10 @@ dialog p { margin-block: 8px 20px; color: var(--muted); }
   .tools { gap: 4px 8px; padding: 4px; }
   .tool-cluster:not(:first-child) { padding-left: 4px; }
   .tool-cluster button, .tool-cluster select { font-size: 12px; }
+  .mobile-district { display: flex; }
+  .apportion-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .apportion-fields label:first-child { grid-column: 1 / -1; }
+  .join-list, .reparto-table { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 350px) {
   #radio-source-label { grid-column: 1 / -1; }
