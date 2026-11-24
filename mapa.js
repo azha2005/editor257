@@ -213,12 +213,20 @@ class MapaDistritos {
         ctx.globalAlpha = 1;
       }
       if (this.hoverIndex >= 0) {
-        const hover = this.path(this.hoverIndex);
+        const hover = this.hoverPath();
         ctx.fillStyle = color.hoverFill;
         ctx.fill(hover, "evenodd");
+        // Solo el contorno: el trazo se recorta afuera del grupo, así no se ven los bordes internos
+        // entre los radios de un circuito o departamento.
+        const outside = new Path2D();
+        outside.rect(extents[0], extents[1], extents[2] - extents[0], extents[3] - extents[1]);
+        outside.addPath(hover);
+        ctx.save();
+        ctx.clip(outside, "evenodd");
         ctx.strokeStyle = color.hover;
-        ctx.lineWidth = 2 / c.z;
+        ctx.lineWidth = 4 / c.z;
         ctx.stroke(hover);
+        ctx.restore();
       }
       this.events.scale(c.z / this.plan.base.escala);
     }
@@ -237,6 +245,17 @@ class MapaDistritos {
       if (index > candidate && this.ctx.isPointInPath(this.path(index), x, y, "evenodd")) candidate = index;
     }
     return candidate;
+  }
+
+  // El resaltado cubre lo que pintaría un clic: la unidad, su circuito vinculado o su departamento.
+  hoverPath() {
+    const group = this.events.hoverGroup?.(this.hoverIndex) ?? {key: `u${this.hoverIndex}`, indices: [this.hoverIndex]};
+    const cache = this.hoverCache;
+    if (cache?.plan === this.plan && cache.key === group.key) return cache.path;
+    const path = new Path2D();
+    for (const index of group.indices) path.addPath(this.path(index));
+    this.hoverCache = {plan: this.plan, key: group.key, path};
+    return path;
   }
 
   hover(index) {

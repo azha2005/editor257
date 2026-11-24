@@ -11,7 +11,8 @@ primero. El mapa, las cifras y el editor funcionan sin conexión y sin servidor.
    **Departamento** (partido en Buenos Aires, comuna en CABA) se pinta el
    departamento entero, en radios o en circuitos: los radios usan su código
    INDEC 2022 y cada circuito va al departamento donde vive la mayor parte de
-   su población. El nombre aparece al pasar el cursor. Para
+   su población. Al pasar el cursor se resalta el contorno de lo que tomaría
+   el pincel (la unidad, el circuito o el departamento) y aparece el nombre. Para
    sacar del plan una unidad, elegí **Borrar**. La rueda controla el zoom y
    **Mover** permite desplazar el mapa o seleccionar el distrito bajo el cursor.
 3. **Deshacer** y **Rehacer** operan por trazo completo. **Inicio del plan**
@@ -73,7 +74,11 @@ nuevas no tienen bancas de 1983 que garantizar.
 **Exportar SVG** y **Exportar PNG** dibujan cada distrito (o provincia) como
 una sola figura con el color del mapa, borde blanco y su número, sobre
 fondo transparente. El número se achica en los distritos chicos para no
-pisarse.
+pisarse. Con **Con departamentos**, cada distrito (o provincia nueva) se
+parte en sus pedazos de departamento, como los mapas por condado recortados
+al distrito: cada pedazo lleva el color de su propio resultado y una línea
+blanca más fina lo separa de los otros pedazos del mismo distrito. Los
+departamentos partidos entre dos distritos quedan como dos pedazos.
 
 En pantallas táctiles, un dedo pinta (o mueve, con **Mover**) y dos dedos
 acercan y desplazan el mapa; si el primer dedo ya había empezado a pintar,

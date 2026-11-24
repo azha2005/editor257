@@ -5,6 +5,9 @@
 // Los tramos de borde que comparten dos unidades del mismo distrito se cancelan. Los que
 // quedan sueltos junto a otra unidad del mismo distrito (rendijas de la cobertura o el
 // límite entre jurisdicciones unidas) también se tratan como internos.
+// Con departamentos = true, cada distrito se parte en sus pedazos de departamento (al estilo de
+// los mapas por condado recortados al distrito): cada pedazo lleva su propio color y entre
+// pedazos del mismo distrito queda una línea más fina.
 
 const exportTolerance = 30;  // unidades del mapa (metros Mercator): unos 20 a 25 m
 
@@ -35,69 +38,8 @@ function ringArea(ring) {
   return area / 2;
 }
 
-function exportarPlan({plan, map, fill, size = 1600}) {
-  const {ancho, alto} = plan.base;
-  const scale = size / Math.max(ancho, alto);
-  const width = Math.ceil(ancho * scale), height = Math.ceil(alto * scale);
-  const inFrame = index => {
-    const [left, top, right, bottom] = map.bounds[index];
-    return right >= 0 && bottom >= 0 && left <= ancho && top <= alto;
-  };
-  const px = value => Math.round(value * scale * 10) / 10;
-
-  // Rellenos: todas las unidades de cada distrito en un solo trazado.
-  const fills = new Map();
-  plan.units.forEach((unit, index) => {
-    if (!inFrame(index)) return;
-    const district = plan.districts[index];
-    if (!fills.has(district)) fills.set(district, []);
-    const parts = fills.get(district);
-    for (const ring of unit[5]) {
-      let last = "";
-      const points = [];
-      for (let i = 0; i < ring.length; i += 2) {
-        const point = `${px(ring[i])} ${px(ring[i + 1])}`;
-        if (point !== last) points.push(point);
-        last = point;
-      }
-      if (points.length >= 3) parts.push(`M${points.join(" ")}Z`);
-    }
-  });
-
-  // Bordes: tramos que no se repiten dentro del mismo distrito.
-  const segments = new Map();
-  plan.units.forEach((unit, index) => {
-    if (!inFrame(index)) return;
-    const district = plan.districts[index];
-    for (const ring of unit[5]) {
-      for (let i = 0, n = ring.length; i < n; i += 2) {
-        const j = (i + 2) % n;
-        const a = `${ring[i]},${ring[i + 1]}`, b = `${ring[j]},${ring[j + 1]}`;
-        if (a === b) continue;
-        const key = a < b ? `${a}|${b}` : `${b}|${a}`;
-        const seen = segments.get(key);
-        if (!seen) segments.set(key, {district, index, coords: [ring[i], ring[i + 1], ring[j], ring[j + 1]], twice: false});
-        else if (seen.district === district) segments.delete(key);
-        else seen.twice = true;
-      }
-    }
-  });
-  const lines = [];
-  for (const segment of segments.values()) {
-    const [ax, ay, bx, by] = segment.coords;
-    if (!segment.twice) {
-      const mx = (ax + bx) / 2, my = (ay + by) / 2, r = exportTolerance;
-      let inner = false;
-      for (const other of map.candidates([mx - r, my - r, mx + r, my + r])) {
-        if (other !== segment.index && plan.districts[other] === segment.district &&
-            nearUnit(plan.units[other], mx, my, r)) { inner = true; break; }
-      }
-      if (inner) continue;
-    }
-    lines.push([px(ax), px(ay), px(bx), px(by)]);
-  }
-
-  // Encadena los tramos en polilíneas para achicar el archivo.
+// Encadena los tramos en polilíneas para achicar el archivo.
+function chainLines(lines) {
   const ends = new Map();
   const keyOf = (x, y) => `${x} ${y}`;
   lines.forEach((line, i) => {
@@ -126,6 +68,88 @@ function exportarPlan({plan, map, fill, size = 1600}) {
     }
     paths.push(`M${chain.join(" ")}`);
   });
+  return paths;
+}
+
+function exportarPlan({plan, map, fill, size = 1600, departamentos = false}) {
+  const {ancho, alto} = plan.base;
+  const scale = size / Math.max(ancho, alto);
+  const width = Math.ceil(ancho * scale), height = Math.ceil(alto * scale);
+  const inFrame = index => {
+    const [left, top, right, bottom] = map.bounds[index];
+    return right >= 0 && bottom >= 0 && left <= ancho && top <= alto;
+  };
+  const px = value => Math.round(value * scale * 10) / 10;
+
+  // Pedazo de cada unidad: su distrito, o su distrito y su departamento.
+  const pieceOf = index => departamentos ? `${plan.districts[index]}:${plan.units[index][7] ?? ""}` :
+    String(plan.districts[index]);
+
+  // Rellenos: todas las unidades de cada pedazo en un solo trazado.
+  const fills = new Map();
+  plan.units.forEach((unit, index) => {
+    if (!inFrame(index)) return;
+    const district = plan.districts[index];
+    const piece = pieceOf(index);
+    if (!fills.has(piece)) fills.set(piece, {district, indices: [], parts: []});
+    const entry = fills.get(piece);
+    entry.indices.push(index);
+    const parts = entry.parts;
+    for (const ring of unit[5]) {
+      let last = "";
+      const points = [];
+      for (let i = 0; i < ring.length; i += 2) {
+        const point = `${px(ring[i])} ${px(ring[i + 1])}`;
+        if (point !== last) points.push(point);
+        last = point;
+      }
+      if (points.length >= 3) parts.push(`M${points.join(" ")}Z`);
+    }
+  });
+
+  // Bordes: tramos que no se repiten dentro del mismo pedazo. Los que separan dos pedazos del
+  // mismo distrito son límites de departamento.
+  const segments = new Map();
+  plan.units.forEach((unit, index) => {
+    if (!inFrame(index)) return;
+    const district = plan.districts[index];
+    const piece = pieceOf(index);
+    for (const ring of unit[5]) {
+      for (let i = 0, n = ring.length; i < n; i += 2) {
+        const j = (i + 2) % n;
+        const a = `${ring[i]},${ring[i + 1]}`, b = `${ring[j]},${ring[j + 1]}`;
+        if (a === b) continue;
+        const key = a < b ? `${a}|${b}` : `${b}|${a}`;
+        const seen = segments.get(key);
+        if (!seen) segments.set(key, {district, piece, index, coords: [ring[i], ring[i + 1], ring[j], ring[j + 1]], twice: false});
+        else if (seen.piece === piece) segments.delete(key);
+        else {
+          seen.twice = true;
+          if (seen.district === district) seen.dept = true;
+        }
+      }
+    }
+  });
+  const lines = [], deptLines = [];
+  for (const segment of segments.values()) {
+    const [ax, ay, bx, by] = segment.coords;
+    let dept = Boolean(segment.dept);
+    if (!segment.twice) {
+      const mx = (ax + bx) / 2, my = (ay + by) / 2, r = exportTolerance;
+      let inner = false;
+      for (const other of map.candidates([mx - r, my - r, mx + r, my + r])) {
+        if (other === segment.index || plan.districts[other] !== segment.district ||
+            !nearUnit(plan.units[other], mx, my, r)) continue;
+        if (pieceOf(other) === segment.piece) { inner = true; break; }
+        dept = true;
+      }
+      if (inner) continue;
+    }
+    // Sin distrito no hay recorte: lo no asignado queda como un solo bloque gris.
+    if (dept && !segment.district) continue;
+    (dept ? deptLines : lines).push([px(ax), px(ay), px(bx), px(by)]);
+  }
+  const paths = chainLines(lines), deptPaths = chainLines(deptLines);
 
   // Números: en la unidad más cercana al centro de área del distrito, siempre dentro de él.
   const centers = new Map();
@@ -159,16 +183,22 @@ function exportarPlan({plan, map, fill, size = 1600}) {
     labels.push(`<text x="${px((left + right) / 2)}" y="${px((top + bottom) / 2)}"${sized}>${district}</text>`);
   }
 
-  const groups = [...fills].sort((a, b) => a[0] - b[0]).map(([district, parts]) => {
-    const color = fill(district);
-    return `<path data-distrito="${district}" fill="${color}" stroke="${color}" stroke-width="1" d="${parts.join("")}"/>`;
+  const groups = [...fills.values()].sort((a, b) => a.district - b.district).map(({district, indices, parts}) => {
+    const color = departamentos ? fill(district, indices) : fill(district);
+    const dept = departamentos ? ` data-departamento="${plan.units[indices[0]][7] ?? ""}"` : "";
+    return `<path data-distrito="${district}"${dept} fill="${color}" stroke="${color}" stroke-width="1" d="${parts.join("")}"/>`;
   });
+  const lineWidth = Math.max(.8, size / 1000);
+  const deptGroup = departamentos ? `
+<g id="departments" fill="none" stroke="#ffffff" stroke-opacity=".85" stroke-width="${(lineWidth * .45).toFixed(2)}">
+<path d="${deptPaths.join("")}"/>
+</g>` : "";
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" stroke-linecap="round" stroke-linejoin="round">
 <g id="districts" fill-rule="evenodd">
 ${groups.join("\n")}
-</g>
-<g id="boundaries" fill="none" stroke="#ffffff" stroke-width="${Math.max(.8, size / 1000).toFixed(1)}">
+</g>${deptGroup}
+<g id="boundaries" fill="none" stroke="#ffffff" stroke-width="${lineWidth.toFixed(1)}">
 <path d="${paths.join("")}"/>
 </g>
 <g id="labels" font-family="Arial, Helvetica, sans-serif" font-size="${fontSize.toFixed(1)}" font-weight="600" fill="black" text-anchor="middle" dominant-baseline="central">

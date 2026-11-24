@@ -21,7 +21,7 @@ function readMapColors() {
 let colors = readMapColors();
 
 const controls = ["province", "mode", "election", "group", "brush", "map-view", "download", "reset",
-  "seats", "export-svg", "export-png", "reparto", "camara", "seat-count", "seat-default", "join-apply", "join-amba", "join-clear", "active-district", "carve-amba", "carve-apply"];
+  "seats", "export-lines", "export-svg", "export-png", "reparto", "camara", "seat-count", "seat-default", "join-apply", "join-amba", "join-clear", "active-district", "carve-amba", "carve-apply"];
 const displayModes = new Set(["assignment", "unit", "lean", "unassigned"]);
 const pending = new Map();
 const localPlans = new Map();
@@ -66,13 +66,13 @@ const map = new MapaDistritos($("canvas"), {
     redraw();
   },
   paint: (indices, type) => {
-    let units = indices;
-    if ($("group").value === "dept") {
-      const depts = new Set(indices.map(ix => plan.units[ix][7]));
-      units = [...depts].flatMap(dept => plan.deptGroups.get(dept) ?? []);
-    } else if (plan.base.modo === "radios" && $("group").value === "group") {
-      const groups = new Set(indices.map(ix => plan.units[ix][1]));
-      units = [...groups].flatMap(group => plan.groups.get(group));
+    const keys = new Set();
+    const units = [];
+    for (const index of indices) {
+      const group = brushGroup(index);
+      if (keys.has(group.key)) continue;
+      keys.add(group.key);
+      units.push(...group.indices);
     }
     const target = type === "erase" ? 0 : active;
     blockedStroke ||= units.some(index => !plan.allowsChange(plan.districts[index], target));
@@ -88,6 +88,7 @@ const map = new MapaDistritos($("canvas"), {
     }
   },
   hover: showHover,
+  hoverGroup: index => tool === "pan" ? null : brushGroup(index),
   inspect: index => {
     const district = plan.districts[index];
     if (district) chooseDistrict(district);
@@ -101,6 +102,15 @@ const map = new MapaDistritos($("canvas"), {
     $("scale").querySelector("i").style.width = `${meters * pxPerMetre}px`;
   }
 });
+
+// Lo que toma el pincel desde una unidad: ella sola, su circuito vinculado o su departamento.
+function brushGroup(index) {
+  const mode = $("group").value;
+  const unit = plan.units[index];
+  if (mode === "dept" && unit[7] !== undefined) return {key: `d${unit[7]}`, indices: plan.deptGroups.get(unit[7])};
+  if (mode === "group" && plan.base.modo === "radios") return {key: `c${unit[1]}`, indices: plan.groups.get(unit[1])};
+  return {key: `u${index}`, indices: [index]};
+}
 
 function make(tag, text = "", className = "") {
   const element = document.createElement(tag);
@@ -511,6 +521,7 @@ async function load(ids, mode, savedPlan = null) {
     $("th-dev").textContent = carve ? "Bancas" : "Desvío";
     $("quota-label").textContent = carve ? "Población media" : "Población ideal";
     $("seats-label").textContent = carve ? "Provincias nuevas" : "Distritos del plan";
+    $("export-lines").options[0].textContent = carve ? "Solo provincias" : "Solo distritos";
     displayCompleteResults = false;
     makeRows();
     refreshView();
@@ -755,7 +766,10 @@ function setTool(next) {
   document.querySelectorAll("button[data-tool]").forEach(button => {
     button.setAttribute("aria-pressed", String(button.dataset.tool === next));
   });
+  map.request();
 }
+
+$("group").addEventListener("change", () => map.request());
 
 function timeTravel(action) {
   if (!plan || plan.stroke || switching) return;
@@ -792,7 +806,20 @@ function exportFill() {
       paper: "#ffffff", alternate: palette, blank: empty, tie: "#bbbeb8", missing: "#d8e0dd"
     });
     const results = paper.districts(plan);
-    return district => district ? paper.shade(results[district]) : empty;
+    const width = plan.voteRows.find(row => row)?.length ?? 0;
+    // Con indices, el color es el del pedazo (un departamento recortado al distrito), no el del distrito.
+    return (district, indices) => {
+      if (!district) return empty;
+      if (!indices) return paper.shade(results[district]);
+      const votes = new Float64Array(width);
+      let missing = false;
+      for (const index of indices) {
+        const row = plan.voteRows[index];
+        if (!row) { missing = true; continue; }
+        for (let i = 0; i < width; i++) votes[i] += row[i];
+      }
+      return paper.shade(paper.district({votes, missing}, plan.method));
+    };
   }
   return district => district ? palette[(district - 1) % palette.length] : empty;
 }
@@ -802,9 +829,10 @@ async function exportMap(format) {
   $("activity").textContent = "Preparando la exportación…";
   await new Promise(resolve => setTimeout(resolve, 30));
   try {
-    const svg = exportarPlan({plan, map, fill: exportFill()});
+    const departamentos = $("export-lines").value === "dept";
+    const svg = exportarPlan({plan, map, fill: exportFill(), departamentos});
     const blob = format === "svg" ? new Blob([svg], {type: "image/svg+xml"}) : await svgToPng(svg);
-    saveBlob(blob, `distrito257-${plan.base.id}-${plan.base.modo}-${plan.base.bancas}.${format}`);
+    saveBlob(blob, `distrito257-${plan.base.id}-${plan.base.modo}-${plan.base.bancas}${departamentos ? "-deptos" : ""}.${format}`);
     $("activity").textContent = `Mapa exportado en ${format.toUpperCase()}.`;
   } catch (error) {
     $("activity").textContent = error.message;
