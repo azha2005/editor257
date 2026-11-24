@@ -43,7 +43,18 @@ class PlanDistritos {
     this.method = method;
     this.atlas = atlas;
     this.elections = method === "geo" && atlas ? atlas.elecciones : this.base.elecciones;
-    this.voteRows = this.units.map(unit => method === "geo" ? atlas?.votos[unit[0]] ?? null : unit[4]);
+    this.selectElection(this.voteElection, true);
+  }
+
+  selectElection(election, rebuild = false) {
+    const previous = this.voteElection;
+    this.voteElection = election;
+    const missing = this.atlas?.sinCobertura ?? {};
+    if (!rebuild && (election === previous || !(missing[election] || missing[previous]))) return;
+    const excluded = new Set(missing[election]);
+    this.voteRows = this.units.map(unit => this.method === "geo" ?
+      (excluded.has(unit[0]) ? null : this.atlas?.votos[unit[0]] ?? null) : unit[4]);
+    this.coveredVotes = this.voteRows.reduce((count, row) => count + Number(row !== null), 0);
     const fields = this.elections.reduce((sum, election) => sum + election.partidos.length, 0);
     this.totals = Array.from({length: this.base.bancas + 1}, () => ({
       units: 0, pop: 0, votes: new Float64Array(fields), missing: 0, missingPop: 0

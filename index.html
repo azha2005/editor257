@@ -4,14 +4,27 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Distrito 257 | Editor uninominal</title>
-  <meta name="description" content="Dibujá distritos uninominales en Argentina por radio censal o circuito y calculá el margen de cada distrito mientras pintás.">
+  <meta name="description" content="Dibujá distritos uninominales en la Argentina por radio censal, circuito o departamento, con población del censo 2022 y votos de 2023 y 2025. Elegí el reparto de bancas, uní provincias o armá tu propio AMBA y exportá el mapa.">
+  <link rel="canonical" href="https://azha2005.github.io/editor257/">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="es_AR">
+  <meta property="og:url" content="https://azha2005.github.io/editor257/">
+  <meta property="og:title" content="Editor uninominal: dibujá tus propios distritos">
+  <meta property="og:description" content="Radios censales, circuitos o departamentos de las 24 jurisdicciones, con población y votos. Repartos Bignone o propios, uniones de provincias y exportación en SVG o PNG.">
+  <meta property="og:image" content="https://azha2005.github.io/editor257/portada.png?v=1">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Mapa del AMBA dividido en distritos uninominales numerados, coloreados por el margen de la fuerza ganadora en Diputados 2025, junto al título Dibujá tus propios distritos uninominales.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Editor uninominal: dibujá tus propios distritos">
+  <meta name="twitter:image" content="https://azha2005.github.io/editor257/portada.png?v=1">
   <script>
     let storedTheme;
     try { storedTheme = localStorage.getItem("tema"); } catch {}
     document.documentElement.dataset.theme = ["light", "dark"].includes(storedTheme) ? storedTheme :
       (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
   </script>
-  <link rel="stylesheet" href="estilo.css?v=be8f262498">
+  <link rel="stylesheet" href="estilo.css?v=e84d952d70">
 </head>
 <body>
   <div class="shell">
@@ -186,8 +199,8 @@
 
       <details class="notes">
         <summary>Fuentes, alcance y atajos</summary>
-        <p>Radios del Censo 2022, compilados por CONICET. La población por radio cubre viviendas particulares. Los votos por radio son estimados. La capa de locales cubre CABA y los 135 partidos de Buenos Aires. Para 2025 se usan los votos de octubre por local. Para las dos elecciones de 2023 se reparten los votos por circuito usando los locales de 2025 como referencia. Si falta un local utilizable, se recurre a un punto representativo del circuito.</p>
-        <p><a href="control_pba.json">Control de cobertura y totales de Buenos Aires</a>. La opción Reparto por circuito distribuye en proporción a la población y cubre el país.</p>
+        <p>Radios del Censo 2022, compilados por CONICET. La población por radio cubre viviendas particulares. Los votos por radio se estiman por distancia a los locales dentro de cada departamento, partido o comuna. Para 2025 se usan los votos de octubre por local. Para las dos elecciones de 2023 se reparten los votos por circuito usando los locales de 2025 como referencia. Ante la falta de un local utilizable, se usa un punto representativo del circuito o del departamento.</p>
+        <p>La opción Reparto por circuito distribuye en proporción a la población. <a href="control_locales.json">Cobertura y puntos de respaldo por provincia</a> · <a href="control_pba.json">Control de Buenos Aires</a>.</p>
         <p>El modo de circuitos usa población estimada según el padrón y votos observados para Diputados 2025 donde la base tiene cobertura. Para 2023 se usan datos adaptados a los circuitos de 2025.</p>
         <p>El desvío se destaca cuando supera el 2 %. La contigüidad se comprueba por segmentos de borde compartidos entre polígonos. Las islas separadas cuentan como fragmentos. El pincel de circuito en modo radios usa el vínculo aproximado de la base entre radio y circuito.</p>
         <p>El reparto de las bancas sigue la Ley 22.847 con el Censo 2022: un diputado cada 161.000 habitantes o fracción de 80.500, más 3 por distrito, piso de 5 y garantía de las bancas de 1983. Las variantes ajustadas buscan el cociente que deja la Cámara en el total pedido (método de Webster). Cada número de distritos guarda su propio plan; solo el de la base del proyecto arranca con distritos dibujados.</p>
@@ -208,13 +221,13 @@
       </div>
     </form>
   </dialog>
-  <script src="plan.js?v=be8f262498" defer></script>
-  <script src="mapa.js?v=be8f262498" defer></script>
-  <script src="lean.js?v=be8f262498" defer></script>
-  <script src="reparto.js?v=be8f262498" defer></script>
-  <script src="export.js?v=be8f262498" defer></script>
-  <script src="datos/colores.js?v=be8f262498" defer></script>
-  <script src="app.js?v=be8f262498" defer></script>
-  <script src="datos/catalogo.js?v=be8f262498" defer></script>
+  <script src="plan.js?v=e84d952d70" defer></script>
+  <script src="mapa.js?v=e84d952d70" defer></script>
+  <script src="lean.js?v=e84d952d70" defer></script>
+  <script src="reparto.js?v=e84d952d70" defer></script>
+  <script src="export.js?v=e84d952d70" defer></script>
+  <script src="datos/colores.js?v=e84d952d70" defer></script>
+  <script src="app.js?v=e84d952d70" defer></script>
+  <script src="datos/catalogo.js?v=e84d952d70" defer></script>
 </body>
 </html>

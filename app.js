@@ -20,7 +20,7 @@ function readMapColors() {
 }
 let colors = readMapColors();
 
-const controls = ["province", "mode", "radio-source", "election", "group", "brush", "map-view", "download", "reset",
+const controls = ["province", "mode", "election", "group", "brush", "map-view", "download", "reset",
   "seats", "export-svg", "export-png", "reparto", "camara", "seat-count", "seat-default", "join-apply", "join-amba", "join-clear", "active-district", "carve-amba", "carve-apply"];
 const displayModes = new Set(["assignment", "unit", "lean", "unassigned"]);
 const pending = new Map();
@@ -202,6 +202,7 @@ function refreshView() {
 
 function setControls(enabled) {
   for (const id of controls) $(id).disabled = !enabled;
+  $("radio-source").disabled = !enabled || !plan?.base.geolocalizados;
   $("open").disabled = !enabled;
   $("lock-district").disabled = !enabled;
   $("find-unassigned").disabled = !enabled || !plan?.totals[0].units;
@@ -390,10 +391,12 @@ async function getAtlas(ids) {
   if (ids.length === 1 || !list.length) return list[0] ?? null;
   const merged = mergeElections(list.map(atlas => atlas.elecciones));
   const votos = {};
+  const sinCobertura = {};
   list.forEach((atlas, m) => {
     for (const [code, row] of Object.entries(atlas.votos)) votos[code] = remapVotes(row, merged.maps[m], merged.width);
+    for (const [id, codes] of Object.entries(atlas.sinCobertura ?? {})) (sinCobertura[id] ??= []).push(...codes);
   });
-  atlases.set(key, {id: key, elecciones: merged.elecciones, votos});
+  atlases.set(key, {id: key, elecciones: merged.elecciones, votos, sinCobertura});
   return atlases.get(key);
 }
 
@@ -427,6 +430,7 @@ function updateElection(previous) {
   const alternatives = plan.elections;
   $("election").replaceChildren(...alternatives.map(item => new Option(item.nombre, item.id)));
   election = alternatives.find(item => item.id === previous) ?? alternatives[0];
+  plan.selectElection(election.id);
   $("election").value = election.id;
 }
 
@@ -472,7 +476,7 @@ async function load(ids, mode, savedPlan = null) {
     }
     const stored = restore(base);
     const previous = election?.id;
-    const method = mode === "radios" ? voteMethod : "circuit";
+    const method = mode === "radios" && base.geolocalizados ? voteMethod : "circuit";
     const atlas = method === "geo" ? await getAtlas(ids) : null;
     const next = new PlanDistritos(base, stored, method, atlas, initial);
     if (imported) next.importAssignments(imported);
@@ -483,7 +487,7 @@ async function load(ids, mode, savedPlan = null) {
     showJurisdiction(ids);
     $("mode").value = mode;
     $("radio-source-label").hidden = mode !== "radios";
-    $("radio-source").value = voteMethod;
+    $("radio-source").value = method;
     $("group").selectedIndex = 0;
     $("group").options[0].textContent = mode === "radios" ? "Un radio" : "Un circuito";
     $("group").options[1].hidden = mode === "circuitos";
@@ -622,10 +626,8 @@ function paintSummary() {
     `${number(plan.population)} habitantes en el plan`;
   $("vote-coverage").hidden = plan.base.modo !== "radios";
   if (plan.method === "geo") {
-    const n = plan.base.geolocalizados;
-    $("vote-coverage").textContent = n ?
-      `${election.metodo}: ${number(n)} de ${number(plan.units.length)} radios con estimación.` :
-      "Sin estimación geolocalizada en esta jurisdicción.";
+    const n = plan.coveredVotes;
+    $("vote-coverage").textContent = `${election.metodo}: ${number(n)} de ${number(plan.units.length)} radios con estimación.`;
   } else {
     $("vote-coverage").textContent = "Estimación por radio con reparto por población dentro del circuito.";
   }
@@ -941,9 +943,9 @@ $("province").addEventListener("change", () => {
 });
 $("mode").addEventListener("change", () => load(members, $("mode").value));
 $("radio-source").addEventListener("change", async () => {
-  if (switching || !plan || map.gesture) return;
+  if (switching || !plan?.base.geolocalizados || map.gesture) return;
   const next = $("radio-source").value;
-  if (!["geo", "circuit"].includes(next) || next === voteMethod) return;
+  if (!["geo", "circuit"].includes(next) || next === plan.method) return;
   switching = true;
   setControls(false);
   $("map-message").hidden = false;
@@ -958,7 +960,7 @@ $("radio-source").addEventListener("change", async () => {
     setLocation();
     redraw();
   } catch (error) {
-    $("radio-source").value = voteMethod;
+    $("radio-source").value = plan.method;
     $("activity").textContent = error.message;
   } finally {
     $("map-message").hidden = true;
@@ -968,6 +970,7 @@ $("radio-source").addEventListener("change", async () => {
 });
 $("election").addEventListener("change", () => {
   election = plan.elections.find(item => item.id === $("election").value);
+  plan.selectElection(election.id);
   displayCompleteResults = false;
   refreshView();
   setLocation();

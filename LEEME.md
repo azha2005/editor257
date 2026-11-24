@@ -107,11 +107,41 @@ radios de los atlas AMBA y extiende el mismo método a 9.620 radios en
   El control detalla los circuitos con respaldo en los 95 partidos. Los votos
   se calculan con los valores fraccionarios de los atlas; solo se
   redondean al mostrar el recuento.
-- Fuera de la cobertura geolocalizada, el modo electoral queda sin voto.
-  Los distritos con cobertura parcial muestran sus votos disponibles
-  en la ficha y quedan fuera del recuento de ganadores. Se puede elegir
-  aparte **Reparto por circuito**, con cobertura nacional y el método
-  de distribuir por población censal dentro de cada circuito.
+- Cuando ninguna jurisdicción seleccionada tiene cobertura de locales,
+  el editor usa **Reparto por circuito**. Este método tiene cobertura nacional
+  y distribuye los votos por población censal dentro de cada circuito.
+  En una unión con cobertura parcial, se puede elegir cualquiera de los dos
+  métodos. Con locales geolocalizados, los distritos que incluyen radios fuera
+  de cobertura muestran los votos disponibles y quedan fuera del recuento
+  de ganadores.
+
+Para las otras 22 provincias se usa la misma función de reparto IDW de la
+serie AMBA que en la ampliación bonaerense. Cada local reparte su aporte
+entre los radios de su departamento por distancia inversa al cuadrado,
+con distancia mínima de 25 m y el mismo corte de un voto. En 2025 se
+agrupan las mesas y listas del provisorio de la DINE por local y circuito.
+Los puntos del sigE de la CNE se cotejan por distrito, sección, rango de
+mesas e identidad del establecimiento. El Mapa Educativo Nacional aporta
+puntos precisos cuando se confirma la escuela dentro o junto al circuito.
+Si no se verifica el local, su aporte parte de un punto del circuito o,
+cuando falta el polígono, del departamento.
+
+Para 2023 se usan los votos provisorios de cada circuito y se ponderan los
+locales de 2025 que caen en su polígono por cantidad de electores, igual que
+en la ampliación bonaerense. Se usan los límites aproximados disponibles
+para 2023. Si falta el polígono, se busca el mismo código dentro de la misma
+sección en 2025. El control provincial separa las distintas fuentes de
+ubicación y registra los departamentos sin datos por elección.
+
+Fuentes de la ampliación nacional:
+
+- [Resultados por mesa y padrón de locales de la DINE](https://datos.mininterior.gob.ar/dataset/elecciones_legislativas_2025).
+- [Locales de votación 2025 del sigE de la CNE](https://www.padron.gov.ar/cne_sige/), archivo `datos_oficiales/2025/sige_locales/<distrito>.geojson` obtenido con `api/download_layer.php?layer=distrito_<distrito>.locales_votacion_2025&format=geojson`.
+- [Mapa Educativo Nacional](https://mapa.educacion.gob.ar/mapa-interactivo), capa WFS `publico:establecimiento_educativo` guardada como `datos_oficiales/2025/sige_locales/escuelas_mapa_educativo.geojson`.
+- [Resultados provisorios 2023 de la DINE](https://datos.mininterior.gob.ar/dataset/resultados-provisionales-elecciones-2023), agregados en `transferencias/circ_2023p.pkl` y `transferencias/circ_2023b.pkl`.
+
+`control_locales.json` registra totales por lista, radios con cobertura y
+votos según el tipo de punto utilizado para cada provincia ampliada.
 
 En la geografía de circuitos, Diputados 2025 usa los positivos observados
 donde existe cobertura. El resto de las elecciones está adaptado a los

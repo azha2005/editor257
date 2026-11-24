@@ -1,0 +1,1981 @@
+{
+  "03": {
+    "radios": 693,
+    "elecciones": {
+      "25": {
+        "positivos": 214564,
+        "error_max_departamento": 2.1827872842550278e-11,
+        "por_lista": {
+          "0011": 2951,
+          "0018": 97988,
+          "0019": 6653,
+          "0021": 72176,
+          "0022": 6616,
+          "0031": 4133,
+          "0045": 13928,
+          "0322": 6449,
+          "0323": 3670
+        },
+        "de_ubicacion": {
+          "local_sigE": {
+            "unidades": 207,
+            "positivos": 184732
+          },
+          "punto_circuito_2025": {
+            "unidades": 29,
+            "positivos": 27511
+          },
+          "local_mapa_educativo": {
+            "unidades": 3,
+            "positivos": 2321
+          }
+        },
+        "radios_con_cobertura": 693,
+        "departamentos_sin_datos": {}
+      },
+      "23": {
+        "positivos": 232775,
+        "error_max_departamento": 2.9103830456733704e-11,
+        "por_lista": {
+          "FIT": 3666,
+          "HXNP": 14967,
+          "JXC": 39960,
+          "LLA": 74570,
+          "UP": 99612
+        },
+        "de_ubicacion": {
+          "locales_2025_dentro_del_circuito_2023": {
+            "unidades": 147,
+            "positivos": 227112
+          },
+          "punto_circuito_2023": {
+            "unidades": 10,
+            "positivos": 5663
+          }
+        },
+        "radios_con_cobertura": 693,
+        "departamentos_sin_datos": {}
+      },
+      "23b": {
+        "positivos": 234309,
+        "error_max_departamento": 1.4551915228366852e-11,
+        "por_lista": {
+          "LLA": 123588,
+          "UP": 110721
+        },
+        "de_ubicacion": {
+          "locales_2025_dentro_del_circuito_2023": {
+            "unidades": 146,
+            "positivos": 229941
+          },
+          "punto_circuito_2023": {
+            "unidades": 9,
+            "positivos": 4368
+          }
+        },
+        "radios_con_cobertura": 686,
+        "departamentos_sin_datos": {
+          "10028": "Departamento Antofagasta de la Sierra"
+        }
+      }
+    }
+  },
+  "04": {
+    "radios": 6720,
+    "elecciones": {
+      "25": {
+        "positivos": 1941359,
+        "error_max_departamento": 1.2369127944111824e-10,
+        "por_lista": {
+          "0021": 822240,
+          "0048": 93202,
+          "0050": 10488,
+          "0051": 2680,
+          "0052": 31654,
+          "0053": 3866,
+          "0054": 6516,
+          "0055": 4659,
+          "0056": 5109,
+          "0057": 5275,
+          "0059": 40263,
+          "0062": 4659,
+          "0063": 17895,
+          "0064": 549839,
+          "0119": 11458,
+          "0248": 98758,
+          "0335": 62847,
+          "0365": 169951
+        },
+        "de_ubicacion": {
+          "local_sigE": {
+            "unidades": 1497,
+            "positivos": 1938870
+          },
+          "punto_circuito_2025": {
+            "unidades": 6,
+            "positivos": 2489
+          }
+        },
+        "radios_con_cobertura": 6720,
+        "departamentos_sin_datos": {}
+      },
+      "23": {
+        "positivos": 2294727,
+        "error_max_departamento": 2.3283064365386963e-10,
+        "por_lista": {
+          "FIT": 31895,
+          "HXNP": 665717,
+          "JXC": 519252,
+          "LLA": 769847,
+          "UP": 308016
+        },
+        "de_ubicacion": {
+          "locales_2025_dentro_del_circuito_2023": {
+            "unidades": 582,
+            "positivos": 2263199
+          },
+          "punto_circuito_2023": {
+            "unidades": 46,
+            "positivos": 28200
+          },
+          "locales_2025_del_mismo_codigo": {
+            "unidades": 3,
+            "positivos": 2879
+          },
+          "punto_circuito_2025": {
+            "unidades": 1,
+            "positivos": 449
+          }
+        },
+        "radios_con_cobertura": 6720,
+        "departamentos_sin_datos": {}
+      },
+      "23b": {
+        "positivos": 2210842,
+        "error_max_departamento": 5.820766091346741e-10,
+        "por_lista": {
+          "LLA": 1637147,
+          "UP": 573695
+        },
+        "de_ubicacion": {
+          "locales_2025_dentro_del_circuito_2023": {
+            "unidades": 580,
+            "positivos": 2180458
+          },
+          "punto_circuito_2023": {
+            "unidades": 45,
+            "positivos": 27092
+          },
+          "locales_2025_del_mismo_codigo": {
+            "unidades": 3,
+            "positivos": 2787
+          },
+          "punto_circuito_2025": {
+            "unidades": 1,
+            "positivos": 505
+          }
+        },
+        "radios_con_cobertura": 6720,
+        "departamentos_sin_datos": {}
+      }
+    }
+  },
+  "05": {
+    "radios": 1985,
+    "elecciones": {
+      "25": {
+        "positivos": 545624,
+        "error_max_departamento": 2.9103830456733704e-11,
+        "por_lista": {
+          "0065": 154546,
+          "0066": 7624,
+          "0067": 20112,
+          "0068": 185048,
+          "0069": 178294
+        },
+        "de_ubicacion": {
+          "punto_circuito_2025": {
+            "unidades": 174,
+            "positivos": 331767
+          },
+          "local_sigE": {
+            "unidades": 99,
+            "positivos": 137470
+          },
+          "local_mapa_educativo": {
+            "unidades": 74,
+            "positivos": 76387
+          }
+        },
+        "radios_con_cobertura": 1985,
+        "departamentos_sin_datos": {}
+      },
+      "23": {
+        "positivos": 698908,
+        "error_max_departamento": 8.731149137020111e-11,
+        "por_lista": {
+          "FIT": 7315,
+          "HXNP": 19118,
+          "JXC": 224519,
+          "LLA": 187916,
+          "UP": 260040
+        },
+        "de_ubicacion": {
+          "punto_circuito_2023": {
+            "unidades": 56,
+            "positivos": 147490
+          },
+          "locales_2025_dentro_del_circuito_2023": {
+            "unidades": 113,
+            "positivos": 551333
+          },
+          "punto_circuito_2025": {
+            "unidades": 1,
+            "positivos": 85
+          }
+        },
+        "radios_con_cobertura": 1985,
+        "departamentos_sin_datos": {}
+      },
+      "23b": {
+        "positivos": 688348,
+        "error_max_departamento": 5.820766091346741e-11,
+        "por_lista": {
+          "LLA": 366191,
+          "UP": 322157
+        },
+        "de_ubicacion": {
+          "punto_circuito_2023": {
+            "unidades": 55,
+            "positivos": 144096
+          },
+          "locales_2025_dentro_del_circuito_2023": {
+            "unidades": 112,
+            "positivos": 544171
+          },
+          "punto_circuito_2025": {
+            "unidades": 1,
+            "positivos": 81
+          }
+        },
+        "radios_con_cobertura": 1985,
+        "departamentos_sin_datos": {}
+      }
+    }
+  },
+  "06": {
+    "radios": 1947,
+    "elecciones": {
+      "25": {
+        "positivos": 581678,
+        "error_max_departamento": 1.4551915228366852e-11,
+        "por_lista": {
+          "0018": 253517,
+          "0070": 6358,
+          "0071": 7871,
+          "0072": 6553,
+          "0073": 265098,
+          "0074": 13644,
+          "0075": 17754,
+          "0076": 4324,
+          "0077": 2257,
+          "0078": 4302
+        },
+        "de_ubicacion": {
+          "local_mapa_educativo": {
+            "unidades": 256,
+            "positivos": 400826
+          },
+          "punto_circuito_2025": {
+            "unidades": 70,
+            "positivos": 105055
+          },
+          "local_sigE": {
+            "unidades": 54,
+            "positivos": 74375
+          },
+          "punto_departamento": {
+            "unidades": 5,
+            "positivos": 1422
+          }
+        },
+        "radios_con_cobertura": 1947,
+        "departamentos_sin_datos": {}
+      },
+      "23": {
+        "positivos": 711600,
+        "error_max_departamento": 1.8917489796876907e-10,
+        "por_lista": {
+          "FIT": 5482,
+          "HXNP": 25804,
+          "JXC": 171756,
+          "LLA": 197596,
+          "UP": 310962
+        },
+        "de_ubicacion": {
+          "locales_2025_dentro_del_circuito_2023": {
+            "unidades": 129,
+            "positivos": 685772
+          },
+          "punto_circuito_2023": {
+            "unidades": 25,
+            "positivos": 25701
+          },
+          "punto_departamento": {
+            "unidades": 2,
+            "positivos": 127
+          }
+        },
+        "radios_con_cobertura": 1947,
+        "departamentos_sin_datos": {}
+      },
+      "23b": {
+        "positivos": 705060,
+        "error_max_departamento": 8.731149137020111e-11,
+        "por_lista": {
+          "LLA": 353024,
+          "UP": 352036
+        },
+        "de_ubicacion": {
+          "locales_2025_dentro_del_circuito_2023": {
+            "unidades": 125,
+            "positivos": 679544
+          },
+          "punto_circuito_2023": {
+            "unidades": 25,
+            "positivos": 25389
+          },
+          "punto_departamento": {
+            "unidades": 2,
+            "positivos": 127
+          }
+        },
+        "radios_con_cobertura": 1947,
+        "departamentos_sin_datos": {}
+      }
+    }
+  },
+  "07": {
+    "radios": 1028,
+    "elecciones": {
+      "25": {
+        "positivos": 314718,
+        "error_max_departamento": 3.637978807091713e-11,
+        "por_lista": {
+          "0002": 4465,
+          "0079": 13762,
+          "0080": 87628,
+          "0081": 16171,
+          "0083": 89070,
+          "0084": 6380,
+          "0085": 34186,
+          "0086": 63056
+        },
+        "de_ubicacion": {
+          "local_sigE": {
+            "unidades": 236,
+            "positivos": 292696
+          },
+          "punto_circuito_2025": {
+            "unidades": 18,
+            "positivos": 19834
+          },
+          "local_mapa_educativo": {
+            "unidades": 1,
+            "positivos": 2188
+          }
+        },
+        "radios_con_cobertura": 1028,
+        "departamentos_sin_datos": {}
+      },
+      "23": {
+        "positivos": 343511,
+        "error_max_departamento": 2.9103830456733704e-11,
+        "por_lista": {
+          "FIT": 15122,
+          "HXNP": 26555,
+          "JXC": 70717,
+          "LLA": 120297,
+          "UP": 110820
+        },
+        "de_ubicacion": {
+          "locales_2025_del_mismo_codigo": {
+            "unidades": 1,
+            "positivos": 1567
+          },
+          "locales_2025_dentro_del_circuito_2023": {
+            "unidades": 109,
+            "positivos": 327270
+          },
+          "punto_circuito_2023": {
+            "unidades": 11,
+            "positivos": 14674
+          }
+        },
+        "radios_con_cobertura": 1028,
+        "departamentos_sin_datos": {}
+      },
+      "23b": {
+        "positivos": 330810,
+        "error_max_departamento": 2.9103830456733704e-11,
+        "por_lista": {
+          "LLA": 195543,
+          "UP": 135267
+        },
+        "de_ubicacion": {
+          "locales_2025_del_mismo_codigo": {
+            "unidades": 1,
+            "positivos": 1765
+          },
+          "locales_2025_dentro_del_circuito_2023": {
+            "unidades": 102,
+            "positivos": 314842
+          },
+          "punto_circuito_2023": {
+            "unidades": 11,
+            "positivos": 14203
+          }
+        },
+        "radios_con_cobertura": 1002,
+        "departamentos_sin_datos": {
+          "26028": "Departamento Florentino Ameghino",
+          "26049": "Departamento Gastre",
+          "26105": "Departamento Telsen"
+        }
+      }
+    }
+  },
+  "08": {
+    "radios": 3213,
+    "elecciones": {
+      "25": {
+        "positivos": 709403,
+        "error_max_departamento": 3.637978807091713e-11,
+        "por_lista": {
+          "0094": 375525,
+          "0099": 8385,
+          "0272": 17826,
+          "0274": 25296,
+          "0275": 25923,
+          "0371": 12564,
+          "0375": 243884
+        },
+        "de_ubicacion": {
+          "local_sigE": {
+            "unidades": 568,
+            "positivos": 614018
+          },
+          "punto_circuito_2025": {
+            "unidades": 100,
+            "positivos": 95385
+          }
+        },
+        "radios_con_cobertura": 3213,
+        "departamentos_sin_datos": {}
+      },
+      "23": {
+        "positivos": 832482,
+        "error_max_departamento": 8.731149137020111e-11,
+        "por_lista": {
+          "FIT": 12760,
+          "HXNP": 44720,
+          "JXC": 250512,
+          "LLA": 247640,
+          "UP": 276850
+        },
+        "de_ubicacion": {
+          "locales_2025_dentro_del_circuito_2023": {
+            "unidades": 252,
+            "positivos": 747545
+          },
+          "punto_circuito_2023": {
+            "unidades": 61,
+            "positivos": 84937
+          }
+        },
+        "radios_con_cobertura": 3213,
+        "departamentos_sin_datos": {}
+      },
+      "23b": {
+        "positivos": 853966,
+        "error_max_departamento": 1.1641532182693481e-10,
+        "por_lista": {
+          "LLA": 525046,
+          "UP": 328920
+        },
+        "de_ubicacion": {
+          "locales_2025_dentro_del_circuito_2023": {
+            "unidades": 254,
+            "positivos": 767890
+          },
+          "punto_circuito_2023": {
+            "unidades": 60,
+            "positivos": 86076
+          }
+        },
+        "radios_con_cobertura": 3213,
+        "departamentos_sin_datos": {}
+      }
+    }
+  },
+  "09": {
+    "radios": 981,
+    "elecciones": {
+      "25": {
+        "positivos": 326933,
+        "error_max_departamento": 1.4551915228366852e-11,
+        "por_lista": {
+          "0021": 117301,
+          "0071": 3625,
+          "0087": 3253,
+          "0088": 190783,
+          "0089": 11971
+        },
+        "de_ubicacion": {
+          "local_sigE": {
+            "unidades": 287,
+            "positivos": 322399
+          },
+          "punto_circuito_2025": {
+            "unidades": 5,
+            "positivos": 4534
+          }
+        },
+        "radios_con_cobertura": 981,
+        "departamentos_sin_datos": {}
+      },
+      "23": {
+        "positivos": 357802,
+        "error_max_departamento": 3.637978807091713e-11,
+        "por_lista": {
+          "FIT": 2772,
+          "HXNP": 8793,
+          "JXC": 55097,
+          "LLA": 103911,
+          "UP": 187229
+        },
+        "de_ubicacion": {
+          "locales_2025_dentro_del_circuito_2023": {
+            "unidades": 130,
+            "positivos": 349355
+          },
+          "locales_2025_del_mismo_codigo": {
+            "unidades": 20,
+            "positivos": 6876
+          },
+          "punto_circuito_2025": {
+            "unidades": 2,
+            "positivos": 6
+          },
+          "punto_circuito_2023": {
+            "unidades": 9,
+            "positivos": 1565
+          }
+        },
+        "radios_con_cobertura": 981,
+        "departamentos_sin_datos": {}
+      },
+      "23b": {
+        "positivos": 349729,
+        "error_max_departamento": 8.731149137020111e-11,
+        "por_lista": {
+          "LLA": 152131,
+          "UP": 197598
+        },
+        "de_ubicacion": {
+          "locales_2025_dentro_del_circuito_2023": {
+            "unidades": 118,
+            "positivos": 341377
+          },
+          "locales_2025_del_mismo_codigo": {
+            "unidades": 19,
+            "positivos": 7063
+          },
+          "punto_circuito_2025": {
+            "unidades": 2,
+            "positivos": 8
+          },
+          "punto_circuito_2023": {
+            "unidades": 9,
+            "positivos": 1281
+          }
+        },
+        "radios_con_cobertura": 981,
+        "departamentos_sin_datos": {}
+      }
+    }
+  },
+  "10": {
+    "radios": 1019,
+    "elecciones": {
+      "25": {
+        "positivos": 406729,
+        "error_max_departamento": 8.003553375601768e-11,
+        "por_lista": {
+          "0009": 40095,
+          "0090": 81454,
+          "0091": 61539,
+          "0092": 63112,
+          "0093": 5806,
+          "0094": 151415,
+          "0095": 3308
+        },
+        "de_ubicacion": {
+          "local_sigE": {
+            "unidades": 273,
+            "positivos": 377700
+          },
+          "local_mapa_educativo": {
+            "unidades": 10,
+            "positivos": 13094
+          },
+          "punto_circuito_2025": {
+            "unidades": 10,
+            "positivos": 15779
+          },
+          "punto_departamento": {
+            "unidades": 2,
+            "positivos": 156
+          }
+        },
+        "radios_con_cobertura": 1019,
+        "departamentos_sin_datos": {}
+      },
+      "23": {
+        "positivos": 451824,
+        "error_max_departamento": 2.9103830456733704e-11,
+        "por_lista": {
+          "FIT": 16006,
+          "HXNP": 30775,
+          "JXC": 90095,
+          "LLA": 168921,
+          "UP": 146027
+        },
+        "de_ubicacion": {
+          "locales_2025_dentro_del_circuito_2023": {
+            "unidades": 128,
+            "positivos": 450524
+          },
+          "punto_circuito_2023": {
+            "unidades": 7,
+            "positivos": 1222
+          },
+          "punto_departamento": {
+            "unidades": 1,
+            "positivos": 78
+          }
+        },
+        "radios_con_cobertura": 1019,
+        "departamentos_sin_datos": {}
+      },
+      "23b": {
+        "positivos": 434011,
+        "error_max_departamento": 8.731149137020111e-11,
+        "por_lista": {
+          "LLA": 253180,
+          "UP": 180831
+        },
+        "de_ubicacion": {
+          "locales_2025_dentro_del_circuito_2023": {
+            "unidades": 111,
+            "positivos": 432751
+          },
+          "punto_circuito_2023": {
+            "unidades": 8,
+            "positivos": 1260
+          }
+        },
+        "radios_con_cobertura": 993,
+        "departamentos_sin_datos": {
+          "38084": "Departamento Susques",
+          "38105": "Departamento Valle Grande"
+        }
+      }
+    }
+  },
+  "11": {
+    "radios": 904,
+    "elecciones": {
+      "25": {
+        "positivos": 202020,
+        "error_max_departamento": 1.0913936421275139e-11,
+        "por_lista": {
+          "0006": 88004,
+          "0096": 90097,
+          "0098": 17364,
+          "0099": 2432,
+          "0105": 4123
+        },
+        "de_ubicacion": {
+          "local_sigE": {
+            "unidades": 175,
+            "positivos": 198262
+          },
+          "punto_circuito_2025": {
+            "unidades": 2,
+            "positivos": 2336
+          },
+          "local_mapa_educativo": {
+            "unidades": 4,
+            "positivos": 1422
+          }
+        },
+        "radios_con_cobertura": 904,
+        "departamentos_sin_datos": {}
+      },
+      "23": {
+        "positivos": 227672,
+        "error_max_departamento": 1.0913936421275139e-11,
+        "por_lista": {
+          "FIT": 5244,
+          "HXNP": 16947,
+          "JXC": 49911,
+          "LLA": 76341,
+          "UP": 79229
+        },
+        "de_ubicacion": {
+          "locales_2025_dentro_del_circuito_2023": {
+            "unidades": 78,
+            "positivos": 201583
+          },
+          "punto_circuito_2023": {
+            "unidades": 8,
+            "positivos": 24042
+          },
+          "locales_2025_del_mismo_codigo": {
+            "unidades": 2,
+            "positivos": 2047
+          }
+        },
+        "radios_con_cobertura": 904,
+        "departamentos_sin_datos": {}
+      },
+      "23b": {
+        "positivos": 220225,
+        "error_max_departamento": 1.4551915228366852e-11,
+        "por_lista": {
+          "LLA": 126302,
+          "UP": 93923
+        },
+        "de_ubicacion": {
+          "locales_2025_dentro_del_circuito_2023": {
+            "unidades": 78,
+            "positivos": 195110
+          },
+          "punto_circuito_2023": {
+            "unidades": 7,
+            "positivos": 23177
+          },
+          "locales_2025_del_mismo_codigo": {
+            "unidades": 2,
+            "positivos": 1938
+          }
+        },
+        "radios_con_cobertura": 887,
+        "departamentos_sin_datos": {
+          "42042": "Departamento Curacó"
+        }
+      }
+    }
+  },
+  "12": {
+    "radios": 497,
+    "elecciones": {
+      "25": {
+        "positivos": 206067,
+        "error_max_departamento": 7.275957614183426e-12,
+        "por_lista": {
+          "0100": 89789,
+          "0101": 6800,
+          "0102": 2806,
+          "0103": 89168,
+          "0104": 1911,
+          "0105": 4017,
+          "0335": 11576
+        },
+        "de_ubicacion": {
+          "punto_circuito_2025": {
+            "unidades": 22,
+            "positivos": 16881
+          },
+          "local_sigE": {
+            "unidades": 241,
+            "positivos": 188466
+          },
+          "local_mapa_educativo": {
+            "unidades": 3,
+            "positivos": 687
+          },
+          "punto_departamento": {
+            "unidades": 1,
+            "positivos": 33
+          }
+        },
+        "radios_con_cobertura": 497,
+        "departamentos_sin_datos": {}
+      },
+      "23": {
+        "positivos": 236991,
+        "error_max_departamento": 4.3655745685100555e-11,
+        "por_lista": {
+          "FIT": 2189,
+          "HXNP": 20179,
+          "JXC": 27975,
+          "LLA": 89236,
+          "UP": 97412
+        },
+        "de_ubicacion": {
+          "punto_circuito_2023": {
+            "unidades": 4,
+            "positivos": 3393
+          },
+          "locales_2025_dentro_del_circuito_2023": {
+            "unidades": 133,
+            "positivos": 209614
+          },
+          "punto_departamento": {
+            "unidades": 5,
+            "positivos": 2301
+          },
+          "locales_2025_del_mismo_codigo": {
+            "unidades": 3,
+            "positivos": 21683
+          }
+        },
+        "radios_con_cobertura": 497,
+        "departamentos_sin_datos": {}
+      },
+      "23b": {
+        "positivos": 233127,
+        "error_max_departamento": 2.9103830456733704e-11,
+        "por_lista": {
+          "LLA": 125247,
+          "UP": 107880
+        },
+        "de_ubicacion": {
+          "punto_circuito_2023": {
+            "unidades": 4,
+            "positivos": 3347
+          },
+          "locales_2025_dentro_del_circuito_2023": {
+            "unidades": 132,
+            "positivos": 206118
+          },
+          "punto_departamento": {
+            "unidades": 5,
+            "positivos": 2249
+          },
+          "locales_2025_del_mismo_codigo": {
+            "unidades": 3,
+            "positivos": 21413
+          }
+        },
+        "radios_con_cobertura": 497,
+        "departamentos_sin_datos": {}
+      }
+    }
+  },
+  "13": {
+    "radios": 2379,
+    "elecciones": {
+      "25": {
+        "positivos": 1004280,
+        "error_max_departamento": 4.3655745685100555e-11,
+        "por_lista": {
+          "0009": 34605,
+          "0099": 3719,
+          "0277": 253109,
+          "0278": 80148,
+          "0279": 10150,
+          "0280": 54193,
+          "0281": 29663,
+          "0282": 538693
+        },
+        "de_ubicacion": {
+          "local_sigE": {
+            "unidades": 609,
+            "positivos": 952773
+          },
+          "punto_circuito_2025": {
+            "unidades": 33,
+            "positivos": 50570
+          },
+          "local_mapa_educativo": {
+            "unidades": 1,
+            "positivos": 831
+          },
+          "punto_departamento": {
+            "unidades": 1,
+            "positivos": 106
+          }
+        },
+        "radios_con_cobertura": 2379,
+        "departamentos_sin_datos": {}
+      },
+      "23": {
+        "positivos": 1108112,
+        "error_max_departamento": 4.3655745685100555e-11,
+        "por_lista": {
+          "FIT": 38572,
+          "HXNP": 47958,
+          "JXC": 286475,
+          "LLA": 469367,
+          "UP": 265740
+        },
+        "de_ubicacion": {
+          "punto_circuito_2023": {
+            "unidades": 13,
+            "positivos": 20129
+          },
+          "locales_2025_dentro_del_circuito_2023": {
+            "unidades": 178,
+            "positivos": 1087874
+          },
+          "punto_departamento": {
+            "unidades": 1,
+            "positivos": 109
+          }
+        },
+        "radios_con_cobertura": 2379,
+        "departamentos_sin_datos": {}
+      },
+      "23b": {
+        "positivos": 1096814,
+        "error_max_departamento": 7.275957614183426e-11,
+        "por_lista": {
+          "LLA": 780364,
+          "UP": 316450
+        },
+        "de_ubicacion": {
+          "punto_circuito_2023": {
+            "unidades": 12,
+            "positivos": 19692
+          },
+          "locales_2025_dentro_del_circuito_2023": {
+            "unidades": 178,
+            "positivos": 1077012
+          },
+          "punto_departamento": {
+            "unidades": 1,
+            "positivos": 110
+          }
+        },
+        "radios_con_cobertura": 2379,
+        "departamentos_sin_datos": {}
+      }
+    }
+  },
+  "14": {
+    "radios": 2012,
+    "elecciones": {
+      "25": {
+        "positivos": 602703,
+        "error_max_departamento": 7.275957614183426e-11,
+        "por_lista": {
+          "0065": 56780,
+          "0071": 8672,
+          "0106": 25770,
+          "0107": 181238,
+          "0108": 13397,
+          "0110": 223539,
+          "0111": 7673,
+          "0112": 9007,
+          "0113": 50428,
+          "0335": 22891,
+          "0337": 3308
+        },
+        "de_ubicacion": {
+          "local_sigE": {
+            "unidades": 246,
+            "positivos": 333125
+          },
+          "local_mapa_educativo": {
+            "unidades": 40,
+            "positivos": 50569
+          },
+          "punto_circuito_2025": {
+            "unidades": 171,
+            "positivos": 219009
+          }
+        },
+        "radios_con_cobertura": 2012,
+        "departamentos_sin_datos": {}
+      },
+      "23": {
+        "positivos": 725480,
+        "error_max_departamento": 4.3655745685100555e-11,
+        "por_lista": {
+          "FIT": 10036,
+          "HXNP": 29966,
+          "JXC": 104787,
+          "LLA": 305629,
+          "UP": 275062
+        },
+        "de_ubicacion": {
+          "locales_2025_dentro_del_circuito_2023": {
+            "unidades": 88,
+            "positivos": 669945
+          },
+          "punto_circuito_2023": {
+            "unidades": 17,
+            "positivos": 35337
+          },
+          "punto_circuito_2025": {
+            "unidades": 1,
+            "positivos": 109
+          },
+          "locales_2025_del_mismo_codigo": {
+            "unidades": 1,
+            "positivos": 20089
+          }
+        },
+        "radios_con_cobertura": 2012,
+        "departamentos_sin_datos": {}
+      },
+      "23b": {
+        "positivos": 709773,
+        "error_max_departamento": 1.8189894035458565e-11,
+        "por_lista": {
+          "LLA": 403126,
+          "UP": 306647
+        },
+        "de_ubicacion": {
+          "locales_2025_dentro_del_circuito_2023": {
+            "unidades": 85,
+            "positivos": 654725
+          },
+          "punto_circuito_2023": {
+            "unidades": 17,
+            "positivos": 35216
+          },
+          "punto_circuito_2025": {
+            "unidades": 1,
+            "positivos": 83
+          },
+          "locales_2025_del_mismo_codigo": {
+            "unidades": 1,
+            "positivos": 19749
+          }
+        },
+        "radios_con_cobertura": 2012,
+        "departamentos_sin_datos": {}
+      }
+    }
+  },
+  "15": {
+    "radios": 1075,
+    "elecciones": {
+      "25": {
+        "positivos": 382678,
+        "error_max_departamento": 1.4551915228366852e-11,
+        "por_lista": {
+          "0016": 4329,
+          "0081": 17271,
+          "0083": 127666,
+          "0099": 3279,
+          "0114": 27521,
+          "0115": 50281,
+          "0117": 23350,
+          "0118": 120772,
+          "0249": 8209
+        },
+        "de_ubicacion": {
+          "local_sigE": {
+            "unidades": 318,
+            "positivos": 371645
+          },
+          "punto_circuito_2025": {
+            "unidades": 20,
+            "positivos": 11033
+          }
+        },
+        "radios_con_cobertura": 1075,
+        "departamentos_sin_datos": {}
+      },
+      "23": {
+        "positivos": 423284,
+        "error_max_departamento": 2.0372681319713593e-10,
+        "por_lista": {
+          "FIT": 21238,
+          "HXNP": 25215,
+          "JXC": 86927,
+          "LLA": 155394,
+          "UP": 134510
+        },
+        "de_ubicacion": {
+          "locales_2025_dentro_del_circuito_2023": {
+            "unidades": 132,
+            "positivos": 420146
+          },
+          "punto_circuito_2023": {
+            "unidades": 24,
+            "positivos": 3138
+          }
+        },
+        "radios_con_cobertura": 1075,
+        "departamentos_sin_datos": {}
+      },
+      "23b": {
+        "positivos": 419494,
+        "error_max_departamento": 1.4551915228366852e-10,
+        "por_lista": {
+          "LLA": 253472,
+          "UP": 166022
+        },
+        "de_ubicacion": {
+          "locales_2025_dentro_del_circuito_2023": {
+            "unidades": 132,
+            "positivos": 416274
+          },
+          "punto_circuito_2023": {
+            "unidades": 22,
+            "positivos": 3220
+          }
+        },
+        "radios_con_cobertura": 1075,
+        "departamentos_sin_datos": {}
+      }
+    }
+  },
+  "16": {
+    "radios": 1216,
+    "elecciones": {
+      "25": {
+        "positivos": 380912,
+        "error_max_departamento": 7.275957614183426e-11,
+        "por_lista": {
+          "0021": 130278,
+          "0105": 11926,
+          "0119": 10460,
+          "0120": 112266,
+          "0123": 5082,
+          "0341": 11184,
+          "0342": 99716
+        },
+        "de_ubicacion": {
+          "local_sigE": {
+            "unidades": 296,
+            "positivos": 374000
+          },
+          "punto_departamento": {
+            "unidades": 4,
+            "positivos": 268
+          },
+          "punto_circuito_2025": {
+            "unidades": 5,
+            "positivos": 6644
+          }
+        },
+        "radios_con_cobertura": 1216,
+        "departamentos_sin_datos": {}
+      },
+      "23": {
+        "positivos": 438912,
+        "error_max_departamento": 1.0186340659856796e-10,
+        "por_lista": {
+          "FIT": 17649,
+          "HXNP": 27482,
+          "JXC": 79609,
+          "LLA": 148037,
+          "UP": 166135
+        },
+        "de_ubicacion": {
+          "locales_2025_dentro_del_circuito_2023": {
+            "unidades": 136,
+            "positivos": 414365
+          },
+          "punto_circuito_2023": {
+            "unidades": 19,
+            "positivos": 23767
+          },
+          "locales_2025_del_mismo_codigo": {
+            "unidades": 10,
+            "positivos": 623
+          },
+          "punto_departamento": {
+            "unidades": 2,
+            "positivos": 157
+          }
+        },
+        "radios_con_cobertura": 1216,
+        "departamentos_sin_datos": {}
+      },
+      "23b": {
+        "positivos": 434476,
+        "error_max_departamento": 2.9103830456733704e-11,
+        "por_lista": {
+          "LLA": 235662,
+          "UP": 198814
+        },
+        "de_ubicacion": {
+          "locales_2025_dentro_del_circuito_2023": {
+            "unidades": 137,
+            "positivos": 410496
+          },
+          "punto_circuito_2023": {
+            "unidades": 19,
+            "positivos": 23205
+          },
+          "locales_2025_del_mismo_codigo": {
+            "unidades": 10,
+            "positivos": 607
+          },
+          "punto_departamento": {
+            "unidades": 2,
+            "positivos": 168
+          }
+        },
+        "radios_con_cobertura": 1216,
+        "departamentos_sin_datos": {}
+      }
+    }
+  },
+  "17": {
+    "radios": 1830,
+    "elecciones": {
+      "25": {
+        "positivos": 621605,
+        "error_max_departamento": 1.7462298274040222e-10,
+        "por_lista": {
+          "0083": 238459,
+          "0099": 4426,
+          "0105": 19862,
+          "0120": 76075,
+          "0283": 207353,
+          "0284": 40602,
+          "0285": 10180,
+          "0323": 10130,
+          "0335": 14518
+        },
+        "de_ubicacion": {
+          "local_sigE": {
+            "unidades": 430,
+            "positivos": 587599
+          },
+          "punto_circuito_2025": {
+            "unidades": 29,
+            "positivos": 31357
+          },
+          "local_mapa_educativo": {
+            "unidades": 6,
+            "positivos": 2485
+          },
+          "punto_departamento": {
+            "unidades": 2,
+            "positivos": 164
+          }
+        },
+        "radios_con_cobertura": 1830,
+        "departamentos_sin_datos": {}
+      },
+      "23": {
+        "positivos": 765078,
+        "error_max_departamento": 5.820766091346741e-11,
+        "por_lista": {
+          "FIT": 13533,
+          "HXNP": 47990,
+          "JXC": 106684,
+          "LLA": 309115,
+          "UP": 287756
+        },
+        "de_ubicacion": {
+          "locales_2025_dentro_del_circuito_2023": {
+            "unidades": 247,
+            "positivos": 741325
+          },
+          "punto_circuito_2023": {
+            "unidades": 28,
+            "positivos": 16463
+          },
+          "locales_2025_del_mismo_codigo": {
+            "unidades": 10,
+            "positivos": 7290
+          }
+        },
+        "radios_con_cobertura": 1830,
+        "departamentos_sin_datos": {}
+      },
+      "23b": {
+        "positivos": 789019,
+        "error_max_departamento": 8.731149137020111e-11,
+        "por_lista": {
+          "LLA": 456509,
+          "UP": 332510
+        },
+        "de_ubicacion": {
+          "locales_2025_dentro_del_circuito_2023": {
+            "unidades": 242,
+            "positivos": 764411
+          },
+          "punto_circuito_2023": {
+            "unidades": 28,
+            "positivos": 16947
+          },
+          "locales_2025_del_mismo_codigo": {
+            "unidades": 7,
+            "positivos": 7575
+          },
+          "punto_departamento": {
+            "unidades": 1,
+            "positivos": 86
+          }
+        },
+        "radios_con_cobertura": 1803,
+        "departamentos_sin_datos": {
+          "66161": "Departamento Santa Victoria"
+        }
+      }
+    }
+  },
+  "18": {
+    "radios": 888,
+    "elecciones": {
+      "25": {
+        "positivos": 426352,
+        "error_max_departamento": 1.0913936421275139e-11,
+        "por_lista": {
+          "0081": 6087,
+          "0124": 5486,
+          "0125": 6896,
+          "0126": 8071,
+          "0127": 146856,
+          "0129": 132286,
+          "0130": 3264,
+          "0131": 110864,
+          "0347": 6542
+        },
+        "de_ubicacion": {
+          "local_sigE": {
+            "unidades": 229,
+            "positivos": 404740
+          },
+          "punto_circuito_2025": {
+            "unidades": 10,
+            "positivos": 18409
+          },
+          "local_mapa_educativo": {
+            "unidades": 2,
+            "positivos": 3203
+          }
+        },
+        "radios_con_cobertura": 888,
+        "departamentos_sin_datos": {}
+      },
+      "23": {
+        "positivos": 443914,
+        "error_max_departamento": 1.0913936421275139e-11,
+        "por_lista": {
+          "FIT": 10025,
+          "HXNP": 27427,
+          "JXC": 103118,
+          "LLA": 155821,
+          "UP": 147523
+        },
+        "de_ubicacion": {
+          "locales_2025_dentro_del_circuito_2023": {
+            "unidades": 126,
+            "positivos": 410254
+          },
+          "punto_circuito_2023": {
+            "unidades": 16,
+            "positivos": 33293
+          },
+          "locales_2025_del_mismo_codigo": {
+            "unidades": 1,
+            "positivos": 367
+          }
+        },
+        "radios_con_cobertura": 888,
+        "departamentos_sin_datos": {}
+      },
+      "23b": {
+        "positivos": 452247,
+        "error_max_departamento": 2.9103830456733704e-11,
+        "por_lista": {
+          "LLA": 274429,
+          "UP": 177818
+        },
+        "de_ubicacion": {
+          "locales_2025_dentro_del_circuito_2023": {
+            "unidades": 128,
+            "positivos": 418048
+          },
+          "punto_circuito_2023": {
+            "unidades": 16,
+            "positivos": 33826
+          },
+          "locales_2025_del_mismo_codigo": {
+            "unidades": 1,
+            "positivos": 373
+          }
+        },
+        "radios_con_cobertura": 888,
+        "departamentos_sin_datos": {}
+      }
+    }
+  },
+  "19": {
+    "radios": 894,
+    "elecciones": {
+      "25": {
+        "positivos": 257962,
+        "error_max_departamento": 2.9103830456733704e-11,
+        "por_lista": {
+          "0031": 9026,
+          "0094": 132747,
+          "0099": 2947,
+          "0140": 9493,
+          "0286": 17538,
+          "0287": 86211
+        },
+        "de_ubicacion": {
+          "local_sigE": {
+            "unidades": 222,
+            "positivos": 227974
+          },
+          "punto_circuito_2025": {
+            "unidades": 12,
+            "positivos": 22502
+          },
+          "local_mapa_educativo": {
+            "unidades": 6,
+            "positivos": 7461
+          },
+          "punto_departamento": {
+            "unidades": 3,
+            "positivos": 25
+          }
+        },
+        "radios_con_cobertura": 894,
+        "departamentos_sin_datos": {}
+      },
+      "23": {
+        "positivos": 318737,
+        "error_max_departamento": 2.1827872842550278e-11,
+        "por_lista": {
+          "FIT": 6964,
+          "HXNP": 20017,
+          "JXC": 66824,
+          "LLA": 138251,
+          "UP": 86681
+        },
+        "de_ubicacion": {
+          "locales_2025_dentro_del_circuito_2023": {
+            "unidades": 135,
+            "positivos": 294386
+          },
+          "punto_circuito_2025": {
+            "unidades": 2,
+            "positivos": 28
+          },
+          "locales_2025_del_mismo_codigo": {
+            "unidades": 39,
+            "positivos": 2120
+          },
+          "punto_circuito_2023": {
+            "unidades": 11,
+            "positivos": 22170
+          },
+          "punto_departamento": {
+            "unidades": 3,
+            "positivos": 33
+          }
+        },
+        "radios_con_cobertura": 894,
+        "departamentos_sin_datos": {}
+      },
+      "23b": {
+        "positivos": 314416,
+        "error_max_departamento": 1.4551915228366852e-11,
+        "por_lista": {
+          "LLA": 213778,
+          "UP": 100638
+        },
+        "de_ubicacion": {
+          "locales_2025_dentro_del_circuito_2023": {
+            "unidades": 136,
+            "positivos": 290854
+          },
+          "punto_circuito_2025": {
+            "unidades": 2,
+            "positivos": 20
+          },
+          "locales_2025_del_mismo_codigo": {
+            "unidades": 38,
+            "positivos": 2070
+          },
+          "punto_circuito_2023": {
+            "unidades": 11,
+            "positivos": 21441
+          },
+          "punto_departamento": {
+            "unidades": 3,
+            "positivos": 31
+          }
+        },
+        "radios_con_cobertura": 894,
+        "departamentos_sin_datos": {}
+      }
+    }
+  },
+  "20": {
+    "radios": 464,
+    "elecciones": {
+      "25": {
+        "positivos": 165749,
+        "error_max_departamento": 1.8189894035458565e-11,
+        "por_lista": {
+          "0083": 52487,
+          "0099": 2078,
+          "0119": 12839,
+          "0132": 53215,
+          "0134": 5510,
+          "0135": 8071,
+          "0136": 25646,
+          "0350": 5903
+        },
+        "de_ubicacion": {
+          "local_sigE": {
+            "unidades": 99,
+            "positivos": 142213
+          },
+          "punto_circuito_2025": {
+            "unidades": 18,
+            "positivos": 23478
+          },
+          "punto_departamento": {
+            "unidades": 5,
+            "positivos": 58
+          }
+        },
+        "radios_con_cobertura": 464,
+        "departamentos_sin_datos": {}
+      },
+      "23": {
+        "positivos": 171772,
+        "error_max_departamento": 1.4551915228366852e-11,
+        "por_lista": {
+          "FIT": 4948,
+          "HXNP": 11311,
+          "JXC": 28101,
+          "LLA": 62350,
+          "UP": 65062
+        },
+        "de_ubicacion": {
+          "locales_2025_dentro_del_circuito_2023": {
+            "unidades": 25,
+            "positivos": 84097
+          },
+          "punto_circuito_2023": {
+            "unidades": 2,
+            "positivos": 683
+          },
+          "locales_2025_del_mismo_codigo": {
+            "unidades": 10,
+            "positivos": 86978
+          },
+          "punto_departamento": {
+            "unidades": 1,
+            "positivos": 14
+          }
+        },
+        "radios_con_cobertura": 464,
+        "departamentos_sin_datos": {}
+      },
+      "23b": {
+        "positivos": 179423,
+        "error_max_departamento": 3.637978807091713e-11,
+        "por_lista": {
+          "LLA": 104179,
+          "UP": 75244
+        },
+        "de_ubicacion": {
+          "locales_2025_dentro_del_circuito_2023": {
+            "unidades": 24,
+            "positivos": 85397
+          },
+          "punto_circuito_2023": {
+            "unidades": 2,
+            "positivos": 658
+          },
+          "locales_2025_del_mismo_codigo": {
+            "unidades": 10,
+            "positivos": 93361
+          },
+          "punto_departamento": {
+            "unidades": 1,
+            "positivos": 7
+          }
+        },
+        "radios_con_cobertura": 464,
+        "departamentos_sin_datos": {}
+      }
+    }
+  },
+  "21": {
+    "radios": 5385,
+    "elecciones": {
+      "25": {
+        "positivos": 1675665,
+        "error_max_departamento": 5.820766091346741e-10,
+        "por_lista": {
+          "0035": 480946,
+          "0083": 681504,
+          "0099": 10253,
+          "0106": 10309,
+          "0137": 6053,
+          "0139": 9732,
+          "0140": 307143,
+          "0142": 20986,
+          "0143": 13989,
+          "0144": 30499,
+          "0145": 3977,
+          "0146": 7787,
+          "0147": 53267,
+          "0316": 15096,
+          "0323": 9813,
+          "0376": 14311
+        },
+        "de_ubicacion": {
+          "local_sigE": {
+            "unidades": 1451,
+            "positivos": 1669063
+          },
+          "punto_circuito_2025": {
+            "unidades": 7,
+            "positivos": 6602
+          }
+        },
+        "radios_con_cobertura": 5385,
+        "departamentos_sin_datos": {}
+      },
+      "23": {
+        "positivos": 2025489,
+        "error_max_departamento": 2.9103830456733704e-10,
+        "por_lista": {
+          "FIT": 38553,
+          "HXNP": 183205,
+          "JXC": 544677,
+          "LLA": 657813,
+          "UP": 601241
+        },
+        "de_ubicacion": {
+          "locales_2025_del_mismo_codigo": {
+            "unidades": 501,
+            "positivos": 1564098
+          },
+          "punto_departamento": {
+            "unidades": 20,
+            "positivos": 461365
+          },
+          "punto_circuito_2025": {
+            "unidades": 1,
+            "positivos": 26
+          }
+        },
+        "radios_con_cobertura": 5385,
+        "departamentos_sin_datos": {}
+      },
+      "23b": {
+        "positivos": 2034631,
+        "error_max_departamento": 6.402842700481415e-10,
+        "por_lista": {
+          "LLA": 1278243,
+          "UP": 756388
+        },
+        "de_ubicacion": {
+          "locales_2025_del_mismo_codigo": {
+            "unidades": 502,
+            "positivos": 1574130
+          },
+          "punto_departamento": {
+            "unidades": 20,
+            "positivos": 460432
+          },
+          "punto_circuito_2025": {
+            "unidades": 1,
+            "positivos": 69
+          }
+        },
+        "radios_con_cobertura": 5385,
+        "departamentos_sin_datos": {}
+      }
+    }
+  },
+  "22": {
+    "radios": 1093,
+    "elecciones": {
+      "25": {
+        "positivos": 553713,
+        "error_max_departamento": 2.9103830456733704e-11,
+        "por_lista": {
+          "0083": 80084,
+          "0150": 115698,
+          "0156": 57627,
+          "0158": 4265,
+          "0272": 5389,
+          "0289": 6263,
+          "0355": 284387
+        },
+        "de_ubicacion": {
+          "local_sigE": {
+            "unidades": 392,
+            "positivos": 434189
+          },
+          "punto_circuito_2025": {
+            "unidades": 87,
+            "positivos": 101686
+          },
+          "local_mapa_educativo": {
+            "unidades": 23,
+            "positivos": 16905
+          },
+          "punto_departamento": {
+            "unidades": 4,
+            "positivos": 933
+          }
+        },
+        "radios_con_cobertura": 1093,
+        "departamentos_sin_datos": {}
+      },
+      "23": {
+        "positivos": 615058,
+        "error_max_departamento": 5.820766091346741e-11,
+        "por_lista": {
+          "FIT": 7785,
+          "HXNP": 13305,
+          "JXC": 49761,
+          "LLA": 141344,
+          "UP": 402863
+        },
+        "de_ubicacion": {
+          "locales_2025_dentro_del_circuito_2023": {
+            "unidades": 236,
+            "positivos": 590328
+          },
+          "punto_circuito_2023": {
+            "unidades": 20,
+            "positivos": 18429
+          },
+          "locales_2025_del_mismo_codigo": {
+            "unidades": 6,
+            "positivos": 5636
+          },
+          "punto_departamento": {
+            "unidades": 4,
+            "positivos": 665
+          }
+        },
+        "radios_con_cobertura": 1093,
+        "departamentos_sin_datos": {}
+      },
+      "23b": {
+        "positivos": 628840,
+        "error_max_departamento": 2.9103830456733704e-11,
+        "por_lista": {
+          "LLA": 198592,
+          "UP": 430248
+        },
+        "de_ubicacion": {
+          "locales_2025_dentro_del_circuito_2023": {
+            "unidades": 237,
+            "positivos": 603275
+          },
+          "punto_circuito_2023": {
+            "unidades": 20,
+            "positivos": 18778
+          },
+          "locales_2025_del_mismo_codigo": {
+            "unidades": 6,
+            "positivos": 6088
+          },
+          "punto_departamento": {
+            "unidades": 4,
+            "positivos": 699
+          }
+        },
+        "radios_con_cobertura": 1093,
+        "departamentos_sin_datos": {}
+      }
+    }
+  },
+  "23": {
+    "radios": 2320,
+    "elecciones": {
+      "25": {
+        "positivos": 1036114,
+        "error_max_departamento": 1.1641532182693481e-10,
+        "por_lista": {
+          "0094": 363885,
+          "0237": 524057,
+          "0238": 5932,
+          "0239": 22490,
+          "0241": 5574,
+          "0242": 17221,
+          "0243": 8509,
+          "0348": 83926,
+          "0349": 4520
+        },
+        "de_ubicacion": {
+          "local_sigE": {
+            "unidades": 482,
+            "positivos": 1019307
+          },
+          "punto_circuito_2025": {
+            "unidades": 3,
+            "positivos": 4895
+          },
+          "local_mapa_educativo": {
+            "unidades": 5,
+            "positivos": 11912
+          }
+        },
+        "radios_con_cobertura": 2320,
+        "departamentos_sin_datos": {}
+      },
+      "23": {
+        "positivos": 1047505,
+        "error_max_departamento": 2.3283064365386963e-10,
+        "por_lista": {
+          "FIT": 15152,
+          "HXNP": 42086,
+          "JXC": 153130,
+          "LLA": 365992,
+          "UP": 471145
+        },
+        "de_ubicacion": {
+          "locales_2025_dentro_del_circuito_2023": {
+            "unidades": 249,
+            "positivos": 1003515
+          },
+          "punto_circuito_2023": {
+            "unidades": 30,
+            "positivos": 43990
+          }
+        },
+        "radios_con_cobertura": 2320,
+        "departamentos_sin_datos": {}
+      },
+      "23b": {
+        "positivos": 1067647,
+        "error_max_departamento": 5.820766091346741e-11,
+        "por_lista": {
+          "LLA": 555009,
+          "UP": 512638
+        },
+        "de_ubicacion": {
+          "locales_2025_dentro_del_circuito_2023": {
+            "unidades": 249,
+            "positivos": 1023154
+          },
+          "punto_circuito_2023": {
+            "unidades": 30,
+            "positivos": 44493
+          }
+        },
+        "radios_con_cobertura": 2320,
+        "departamentos_sin_datos": {}
+      }
+    }
+  },
+  "24": {
+    "radios": 237,
+    "elecciones": {
+      "25": {
+        "positivos": 96240,
+        "error_max_departamento": 5.4569682106375694e-12,
+        "por_lista": {
+          "0011": 1380,
+          "0021": 37109,
+          "0099": 953,
+          "0120": 29831,
+          "0244": 3040,
+          "0245": 857,
+          "0246": 19945,
+          "0247": 3125
+        },
+        "de_ubicacion": {
+          "local_mapa_educativo": {
+            "unidades": 18,
+            "positivos": 27462
+          },
+          "punto_circuito_2025": {
+            "unidades": 20,
+            "positivos": 24691
+          },
+          "local_sigE": {
+            "unidades": 29,
+            "positivos": 44087
+          }
+        },
+        "radios_con_cobertura": 237,
+        "departamentos_sin_datos": {
+          "94021": "Departamento Islas del Atlántico Sur"
+        }
+      },
+      "23": {
+        "positivos": 106119,
+        "error_max_departamento": 7.275957614183426e-12,
+        "por_lista": {
+          "FIT": 4091,
+          "HXNP": 9714,
+          "JXC": 15875,
+          "LLA": 35891,
+          "UP": 40548
+        },
+        "de_ubicacion": {
+          "locales_2025_dentro_del_circuito_2023": {
+            "unidades": 13,
+            "positivos": 46445
+          },
+          "punto_circuito_2023": {
+            "unidades": 1,
+            "positivos": 2132
+          },
+          "punto_circuito_2025": {
+            "unidades": 6,
+            "positivos": 4642
+          },
+          "locales_2025_del_mismo_codigo": {
+            "unidades": 15,
+            "positivos": 52900
+          }
+        },
+        "radios_con_cobertura": 237,
+        "departamentos_sin_datos": {
+          "94021": "Departamento Islas del Atlántico Sur"
+        }
+      },
+      "23b": {
+        "positivos": 102878,
+        "error_max_departamento": 1.4551915228366852e-11,
+        "por_lista": {
+          "LLA": 54832,
+          "UP": 48046
+        },
+        "de_ubicacion": {
+          "locales_2025_dentro_del_circuito_2023": {
+            "unidades": 13,
+            "positivos": 45531
+          },
+          "punto_circuito_2023": {
+            "unidades": 1,
+            "positivos": 2087
+          },
+          "punto_circuito_2025": {
+            "unidades": 6,
+            "positivos": 4622
+          },
+          "locales_2025_del_mismo_codigo": {
+            "unidades": 15,
+            "positivos": 50638
+          }
+        },
+        "radios_con_cobertura": 237,
+        "departamentos_sin_datos": {
+          "94021": "Departamento Islas del Atlántico Sur"
+        }
+      }
+    }
+  }
+}
