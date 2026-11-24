@@ -189,6 +189,7 @@ class PlanDistritos {
   serialize() {
     return {
       formato: "257-plan-local-v1", jurisdiccion: this.base.id, unidad: this.base.modo,
+      ...(this.base.tipo ? {tipo: this.base.tipo} : {}),
       version: this.base.version, bancas: this.base.bancas,
       bloqueados: [...this.locked].sort((a, b) => a - b),
       asignaciones: this.units.map((unit, i) => [unit[0], this.districts[i]])
@@ -209,7 +210,7 @@ class PlanDistritos {
 
   static read(base, document) {
     if (!document || document.formato !== "257-plan-local-v1" ||
-        document.jurisdiccion !== base.id || document.unidad !== base.modo ||
+        document.jurisdiccion !== base.id || document.unidad !== base.modo || document.tipo !== base.tipo ||
         document.version !== base.version || document.bancas !== base.bancas ||
         !Array.isArray(document.asignaciones) || document.asignaciones.length !== base.unidades.length) {
       throw new Error("El archivo no coincide con esta versión de la base.");

@@ -157,6 +157,7 @@ a:hover { color: var(--accent); }
 .map-hover { position: absolute; bottom: 12px; right: 13px; padding: 4px 8px; background: var(--surface); max-width: 68%; pointer-events: none; }
 .map-hover:empty { display: none; }
 .map-footer { min-height: 46px; display: flex; justify-content: space-between; padding: 4px 12px; align-items: center; gap: 8px; border-top: 1px solid var(--rule); }
+.footer-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px; }
 .map-footer button, .inspect button { font-size: 12px; white-space: nowrap; }
 .ledger { display: flex; flex-direction: column; min-width: 0; border-left: 1px solid var(--edge); }
 .ledger-top, .inspect { padding: 12px 16px; }
@@ -222,6 +223,11 @@ input[type="number"] {
   border: 1px solid var(--field-edge); border-radius: var(--radius); background: var(--surface);
   font-variant-numeric: tabular-nums;
 }
+.quota .seats-input {
+  width: 6ch; min-height: 0; padding: 0 4px; font-size: 25px; font-weight: 690; letter-spacing: -.025em;
+  border-color: var(--rule); background: transparent;
+}
+.quota .seats-input:hover:not(:disabled), .quota .seats-input:focus { border-color: var(--field-edge); background: var(--surface); }
 input[type="number"]:disabled { background: var(--paper); color: var(--disabled); }
 .join { border: 1px solid var(--rule); border-radius: var(--radius); padding: 8px 12px; margin: 0; min-width: 0; }
 .join legend { font-size: 12px; font-weight: 650; padding: 0 4px; }
@@ -254,7 +260,7 @@ input[type="number"]:disabled { background: var(--paper); color: var(--disabled)
   .controls select { font-size: 12px; padding-inline: 4px 0; }
   .controls:has(#radio-source-label[hidden]) label:nth-child(4) { grid-column: 1 / -1; }
   .quota { border: 0; padding: 0; }
-  .quota dd { font-size: 19px; }
+  .quota dd, .quota .seats-input { font-size: 19px; }
   .workbench { grid-template-columns: minmax(0, 1fr); }
   .ledger { border-left: 0; border-top: 1px solid var(--edge); }
   .map-stage { min-height: 365px; height: 56dvh; max-height: 580px; }

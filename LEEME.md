@@ -56,6 +56,21 @@ vecinas las piezas a menos de unos 20 m con al menos 30 m de borde en común:
 las capas provinciales no comparten vértices exactos en la General Paz y el
 Riachuelo.
 
+**Armá tu propia provincia** (o **tu propio AMBA**) cambia lo que se pinta:
+en vez de distritos, provincias nuevas. Cada jurisdicción marcada arranca
+como su propia provincia; se repinta para recortar otras y se pueden sumar
+más en el campo de arriba. Con una sola marcada, se parte. La tabla muestra
+la población de cada provincia nueva y las bancas que le tocarían con el
+reparto elegido, recalculado junto con el resto del país (el reparto vigente
+de 1983 es una tabla fija y no aplica). En la geografía de circuitos, la
+población se escala al censo de las jurisdicciones de origen. Las provincias
+nuevas no tienen bancas de 1983 que garantizar.
+
+**Exportar SVG** y **Exportar PNG** dibujan cada distrito (o provincia) como
+una sola figura con el color del mapa, borde blanco y su número, sobre
+fondo transparente. El número se achica en los distritos chicos para no
+pisarse.
+
 En pantallas táctiles, un dedo pinta (o mueve, con **Mover**) y dos dedos
 acercan y desplazan el mapa; si el primer dedo ya había empezado a pintar,
 ese trazo se descarta. El selector **Distrito** junto a las herramientas

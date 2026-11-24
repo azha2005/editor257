@@ -6,7 +6,8 @@ const assetVersion = new URL(document.currentScript.src).searchParams.get("v") ?
 const number = value => formatInt.format(value);
 const percentage = value => formatDecimal.format(value);
 const pct = value => `${percentage(value)} %`;
-const districtName = district => district ? `Distrito ${district}` : "Sin asignar";
+let carve = false;
+const districtName = district => district ? `${carve ? "Provincia" : "Distrito"} ${district}` : "Sin asignar";
 const css = getComputedStyle(document.documentElement);
 const color = name => css.getPropertyValue(`--${name}`).trim();
 const palette = color("districts").split(",").map(item => item.trim());
@@ -20,7 +21,7 @@ function readMapColors() {
 let colors = readMapColors();
 
 const controls = ["province", "mode", "radio-source", "election", "group", "brush", "map-view", "download", "reset",
-  "reparto", "camara", "seat-count", "seat-default", "join-apply", "join-amba", "join-clear", "active-district"];
+  "seats", "export-svg", "export-png", "reparto", "camara", "seat-count", "seat-default", "join-apply", "join-amba", "join-clear", "active-district", "carve-amba", "carve-apply"];
 const displayModes = new Set(["assignment", "unit", "lean", "unassigned"]);
 const pending = new Map();
 const localPlans = new Map();
@@ -209,6 +210,7 @@ function setControls(enabled) {
 
 // Cada número de distritos tiene su propio plan guardado; el de la base conserva la clave original.
 function saveKey(base) {
+  if (base.tipo === "provincias") return `distrito257/${base.id}/${base.modo}/provincias/${base.bancas}`;
   const suffix = base.bancas === base.bancasBase ? "" : `/${base.bancas}`;
   return `distrito257/${base.id}/${base.modo}${suffix}`;
 }
@@ -250,6 +252,7 @@ async function getBase(id, mode) {
     const base = await getScript(key);
     base.bancasBase = base.bancas;
     base.geolocalizados = catalog.get(id).geolocalizados;
+    base.miembros = [{id, desde: 0, hasta: base.unidades.length}];
     bases.set(key, base);
   }
   return bases.get(key);
@@ -297,7 +300,7 @@ function mergeBases(list, pairs) {
   const top = Math.max(...list.map(base => base.origen[1]));
   const merged = mergeElections(list.map(base => base.elecciones));
   const total = list.reduce((sum, base) => sum + base.unidades.length, 0);
-  const unidades = [], vecinos = [], partesExtra = [], pieces = new Map();
+  const unidades = [], vecinos = [], partesExtra = [], pieces = new Map(), miembros = [];
   let units = 0, extras = 0, districts = 0, ancho = 0, alto = 0;
   list.forEach((base, m) => {
     const dx = Math.round(base.origen[0] - left), dy = Math.round(top - base.origen[1]);
@@ -311,6 +314,7 @@ function mergeBases(list, pairs) {
     for (const value of base.vecinos) vecinos.push(piece(value));
     for (const owner of base.partesExtra ?? []) partesExtra.push(owner + u0);
     pieces.set(base.id, piece);
+    miembros.push({id: base.id, desde: u0, hasta: u0 + n});
     units += n;
     extras += (base.partesExtra ?? []).length;
     districts += base.bancas;
@@ -326,7 +330,7 @@ function mergeBases(list, pairs) {
     id: list.map(base => base.id).join("+"), modo: list[0].modo, nombre: unionName(list.map(base => base.id)),
     bancas: districts, bancasBase: districts, version: list.map(base => base.version).join("+"),
     origen: [left, top], ancho, alto, escala: Math.cos(middle), elecciones: merged.elecciones,
-    unidades, vecinos, partesExtra,
+    unidades, vecinos, partesExtra, miembros,
     geolocalizados: list.reduce((sum, base) => sum + base.geolocalizados, 0)
   };
 }
@@ -397,6 +401,23 @@ function computeSeats() {
 }
 
 const defaultSeats = ids => ids.reduce((sum, id) => sum + seatTable[id], 0);
+// En «provincias nuevas» la cantidad es de provincias: por defecto, una por jurisdicción (al menos dos).
+const defaultCount = ids => carve ? Math.max(2, ids.length) : defaultSeats(ids);
+
+// Bancas de las provincias nuevas: el reparto elegido, con ellas en lugar de sus jurisdicciones de origen.
+// La población de circuitos (estimada por padrón) se escala al censo de las jurisdicciones unidas.
+function carveSeats() {
+  const regla = repartoPorId.get(repartoId);
+  if (!carve || !plan || regla.fijo) return null;
+  const census = members.reduce((sum, id) => sum + catalog.get(id).poblacion, 0);
+  const factor = plan.population ? census / plan.population : 1;
+  const poblacion = {};
+  for (const item of catalog.values()) if (!members.includes(item.id)) poblacion[item.id] = item.poblacion;
+  for (let p = 1; p <= plan.base.bancas; p++) {
+    if (plan.totals[p].pop > 0) poblacion[`p${p}`] = Math.round(plan.totals[p].pop * factor);
+  }
+  try { return repartir(regla, poblacion, camara); } catch { return null; }
+}
 
 function updateElection(previous) {
   const alternatives = plan.elections;
@@ -429,10 +450,15 @@ async function load(ids, mode, savedPlan = null) {
   $("map-message").textContent = `Cargando ${unionName(ids)}…`;
   try {
     const source = await getJurisdiction(ids, mode);
-    const wanted = Math.round(seatsCustom ?? defaultSeats(ids));
+    const wanted = Math.round(seatsCustom ?? defaultCount(ids));
     const seats = Math.max(1, Math.min(wanted, source.unidades.length, 9999));
-    const base = seats === source.bancas ? source : {...source, bancas: seats};
-    const initial = seats === source.bancasBase ? null : new Uint16Array(source.unidades.length);
+    let base = seats === source.bancas ? source : {...source, bancas: seats};
+    let initial = seats === source.bancasBase ? null : new Uint16Array(source.unidades.length);
+    if (carve) {
+      base = {...source, bancas: seats, tipo: "provincias"};
+      initial = new Uint16Array(source.unidades.length);
+      source.miembros.forEach((member, k) => initial.fill(Math.min(k + 1, seats), member.desde, member.hasta));
+    }
     const imported = savedPlan ? PlanDistritos.read(base, savedPlan) : null;
     if (imported && plan && saveKey(plan.base) === saveKey(base)) {
       plan.importAssignments(imported);
@@ -460,13 +486,20 @@ async function load(ids, mode, savedPlan = null) {
     updateElection(previous);
     $("map-view").value = view;
     $("quota").textContent = number(plan.quota);
-    $("seats").textContent = number(base.bancas);
+    $("seats").value = base.bancas;
+    $("seats").max = Math.min(9999, base.unidades.length);
     $("map-name").textContent = base.nombre;
     const kind = mode === "radios" ? "radios censales" : "circuitos electorales";
     $("map-layer").textContent = `${number(plan.units.length)} ${kind}`;
     $("map-message").hidden = true;
     $("activity").textContent = "Elegí un distrito y pintá en el mapa.";
-    $("save-status").textContent = stored ? "Plan recuperado" : initial ? "Plan en blanco" : "Base del proyecto";
+    $("save-status").textContent = stored ? "Plan recuperado" : carve ? "Provincias de origen" :
+      initial ? "Plan en blanco" : "Base del proyecto";
+    $("ledger-title").textContent = carve ? "Provincias nuevas" : "Distritos";
+    $("th-unit").textContent = carve ? "Provincia" : "Distrito";
+    $("th-dev").textContent = carve ? "Bancas" : "Desvío";
+    $("quota-label").textContent = carve ? "Población media" : "Población ideal";
+    $("seats-label").textContent = carve ? "Provincias nuevas" : "Distritos del plan";
     displayCompleteResults = false;
     makeRows();
     refreshView();
@@ -498,6 +531,7 @@ function setLocation() {
   const fragment = new URLSearchParams({
     provincia: plan.base.id, unidad: plan.base.modo, eleccion: election.id, vista: view, estimacion: voteMethod
   });
+  if (carve) fragment.set("armar", "provincias");
   if (repartoId !== "b257") fragment.set("reparto", repartoId);
   if (camara !== 257 && repartoPorId.get(repartoId).ajustado) fragment.set("camara", camara);
   if (seatsCustom !== null) fragment.set("distritos", plan.base.bancas);
@@ -546,6 +580,7 @@ function paintRows() {
   $("prev-page").disabled = from === 0;
   $("next-page").disabled = to === rows.length;
   $("page-range").textContent = `${from + 1} a ${to} de ${rows.length}`;
+  const carved = carve ? carveSeats() : null;
   rows.forEach(({tr, button, swatch, lock, pop, dev}, index) => {
     tr.hidden = index < from || index >= to;
     const district = index + 1;
@@ -560,6 +595,11 @@ function paintRows() {
     swatch.title = result ? lean.title(result) : "";
     pop.textContent = total.units ? number(total.pop) : "—";
     const deviation = plan.quota ? 100 * (total.pop / plan.quota - 1) : 0;
+    if (carve) {
+      dev.textContent = carved?.[`p${district}`] !== undefined ? number(carved[`p${district}`]) : "—";
+      dev.classList.remove("warning");
+      return;
+    }
     dev.textContent = total.units ? `${deviation > .05 ? "+" : ""}${pct(deviation)}` : "—";
     dev.classList.toggle("warning", total.units > 0 && Math.abs(deviation) > 2);
   });
@@ -665,7 +705,7 @@ function paintReview() {
     if (!units) issues.push("Vacío");
     if (counts[i] > 1) issues.push(`${number(counts[i])} fragmentos`);
     const diff = plan.quota ? 100 * (pop / plan.quota - 1) : 0;
-    if (units && Math.abs(diff) > 2) issues.push(`Desvío ${diff > 0 ? "+" : ""}${pct(diff)}`);
+    if (units && !carve && Math.abs(diff) > 2) issues.push(`Desvío ${diff > 0 ? "+" : ""}${pct(diff)}`);
     if (!issues.length) continue;
     const row = make("li");
     const button = make("button", districtName(i));
@@ -720,15 +760,46 @@ function timeTravel(action) {
 function download() {
   if (!plan || plan.stroke) return;
   const blob = new Blob([JSON.stringify(plan.serialize(), null, 2) + "\n"], {type: "application/json"});
+  saveBlob(blob, `distrito257-${plan.base.id}-${plan.base.modo}.json`);
+  $("activity").textContent = "Plan exportado como JSON";
+}
+
+function saveBlob(blob, filename) {
   const url = URL.createObjectURL(blob);
   const anchor = make("a");
   anchor.href = url;
-  anchor.download = `distrito257-${plan.base.id}-${plan.base.modo}.json`;
+  anchor.download = filename;
   document.body.append(anchor);
   anchor.click();
   anchor.remove();
   setTimeout(() => URL.revokeObjectURL(url), 2500);
-  $("activity").textContent = "Plan exportado como JSON";
+}
+
+// Colores de la exportación: los del mapa, siempre sobre papel blanco.
+function exportFill() {
+  const empty = "#e6e6e6";
+  if (view === "lean" || view === "unit") {
+    const paper = new LeanElectoral(plan, election, {
+      paper: "#ffffff", alternate: palette, blank: empty, tie: "#bbbeb8", missing: "#d8e0dd"
+    });
+    const results = paper.districts(plan);
+    return district => district ? paper.shade(results[district]) : empty;
+  }
+  return district => district ? palette[(district - 1) % palette.length] : empty;
+}
+
+async function exportMap(format) {
+  if (!plan || plan.stroke || switching || map.gesture) return;
+  $("activity").textContent = "Preparando la exportación…";
+  await new Promise(resolve => setTimeout(resolve, 30));
+  try {
+    const svg = exportarPlan({plan, map, fill: exportFill()});
+    const blob = format === "svg" ? new Blob([svg], {type: "image/svg+xml"}) : await svgToPng(svg);
+    saveBlob(blob, `distrito257-${plan.base.id}-${plan.base.modo}-${plan.base.bancas}.${format}`);
+    $("activity").textContent = `Mapa exportado en ${format.toUpperCase()}.`;
+  } catch (error) {
+    $("activity").textContent = error.message;
+  }
 }
 
 function buildApportionControls(data) {
@@ -751,33 +822,46 @@ function paintApportion() {
   $("camara").disabled = switching || !regla.ajustado;
   const poblacion = Object.fromEntries([...catalog.values()].map(item => [item.id, item.poblacion]));
   $("camara").min = minimoDeCamara(regla, poblacion) ?? 1;
-  const own = defaultSeats(members);
+  const own = defaultCount(members);
   $("seat-count").value = plan.base.bancas;
   $("seat-count").max = Math.min(9999, plan.units.length);
   $("seat-default").disabled = switching || seatsCustom === null;
   $("seat-default").textContent = `Usar el reparto (${number(own)})`;
   $("join-clear").disabled = switching || members.length === 1;
-  const custom = seatsCustom === null ? "" : ` · ${number(plan.base.bancas)} distritos a mano`;
+  const custom = carve ? ` · ${number(plan.base.bancas)} provincias nuevas` :
+    seatsCustom === null ? "" : ` · ${number(plan.base.bancas)} distritos a mano`;
   $("apportion-summary").textContent = `${regla.nombre} · Cámara de ${number(total)}${custom}`;
   const minimum = $("camara").min > 1 ? ` Mínimo de la Cámara con estas reglas: ${number($("camara").min)}.` : "";
-  $("reparto-detail").textContent = regla.detalle + minimum +
-    (plan.base.bancas === plan.base.bancasBase ? "" : " Con este número de distritos no hay plan de partida: el mapa arranca vacío.");
-  const cells = [...catalog.values()].map(item => {
+  const fixed = carve && regla.fijo ? " Es una tabla fija: para las provincias nuevas elegí otro reparto." : "";
+  $("reparto-detail").textContent = regla.detalle + minimum + fixed + (carve ? "" :
+    plan.base.bancas === plan.base.bancasBase ? "" : " Con este número de distritos no hay plan de partida: el mapa arranca vacío.");
+  const carved = carveSeats();
+  const table = carved ?? seatTable;
+  const cells = [];
+  if (carved) {
+    for (let p = 1; p <= plan.base.bancas; p++) {
+      const cell = make("div", "", "member");
+      cell.append(make("span", districtName(p)), make("span", carved[`p${p}`] === undefined ? "—" : number(carved[`p${p}`])));
+      cells.push(cell);
+    }
+  }
+  for (const item of catalog.values()) {
+    if (carved && members.includes(item.id)) continue;
     const cell = make("div", "", members.includes(item.id) ? "member" : "");
-    cell.append(make("span", item.nombre), make("span", number(seatTable[item.id])));
-    return cell;
-  });
+    cell.append(make("span", item.nombre), make("span", number(table[item.id])));
+    cells.push(cell);
+  }
   const sum = make("div", "", "total");
-  sum.append(make("span", "Total"), make("span", number(total)));
+  sum.append(make("span", "Total"), make("span", number(Object.values(table).reduce((a, b) => a + b, 0))));
   $("reparto-table").replaceChildren(...cells, sum);
 }
 
 // Un cambio de reparto recarga solo si cambia la cantidad de distritos de lo que está abierto.
 function applySeats() {
   if (!plan) return;
-  const wanted = seatsCustom ?? defaultSeats(members);
+  const wanted = seatsCustom ?? defaultCount(members);
   if (wanted !== plan.base.bancas) load(members, plan.base.modo);
-  else { paintApportion(); setLocation(); }
+  else { paintApportion(); setLocation(); redraw(); }
 }
 
 $("reparto").addEventListener("change", () => {
@@ -812,21 +896,41 @@ $("seat-count").addEventListener("change", () => {
   seatsCustom = value === defaultSeats(members) ? null : value;
   applySeats();
 });
+$("seats").addEventListener("change", () => {
+  const value = Math.round(Number($("seats").value));
+  if (!plan || !Number.isFinite(value) || value < 1) { if (plan) $("seats").value = plan.base.bancas; return; }
+  seatsCustom = value === defaultSeats(members) ? null : value;
+  applySeats();
+});
 $("seat-default").addEventListener("click", () => { seatsCustom = null; applySeats(); });
 $("join-apply").addEventListener("click", () => {
   const ids = [...document.querySelectorAll("#join-list input:checked")].map(box => box.value);
   if (!ids.length) { $("activity").textContent = "Marcá al menos una jurisdicción."; return; }
-  seatsCustom = null;
-  load(ids, plan?.base.modo ?? "radios");
+  switchTo(ids, false);
 });
-$("join-amba").addEventListener("click", () => { seatsCustom = null; load(["01", "02"], plan?.base.modo ?? "radios"); });
-$("join-clear").addEventListener("click", () => { seatsCustom = null; load([members[0]], plan?.base.modo ?? "radios"); });
+$("join-amba").addEventListener("click", () => switchTo(["01", "02"], false));
+$("join-clear").addEventListener("click", () => switchTo([members[0]], false));
+$("carve-amba").addEventListener("click", () => switchTo(["01", "02"], true));
+$("carve-apply").addEventListener("click", () => {
+  const ids = [...document.querySelectorAll("#join-list input:checked")].map(box => box.value);
+  if (!ids.length) { $("activity").textContent = "Marcá al menos una jurisdicción."; return; }
+  switchTo(ids, true);
+});
+
+// Cambia de jurisdicciones o de modo; si la carga falla, vuelve al estado anterior.
+async function switchTo(ids, carving) {
+  if (switching) return;
+  const previous = {carve, seatsCustom};
+  carve = carving;
+  seatsCustom = null;
+  if (!await load(ids, plan?.base.modo ?? "radios")) ({carve, seatsCustom} = previous);
+}
 $("active-district").addEventListener("change", () => chooseDistrict(Number($("active-district").value)));
 
 $("province").addEventListener("change", () => {
   const ids = $("province").value.split("+");
-  if (ids.join("+") !== members.join("+")) seatsCustom = null;
-  load(ids, $("mode").value);
+  if (ids.join("+") === members.join("+")) return;
+  switchTo(ids, carve && ids.length > 1);
 });
 $("mode").addEventListener("change", () => load(members, $("mode").value));
 $("radio-source").addEventListener("change", async () => {
@@ -915,6 +1019,8 @@ $("reset-dialog").addEventListener("close", () => {
   else if (protectedUnits) $("activity").textContent = "Solo quedan cambios en distritos bloqueados.";
 });
 $("download").addEventListener("click", download);
+$("export-svg").addEventListener("click", () => exportMap("svg"));
+$("export-png").addEventListener("click", () => exportMap("png"));
 $("open").addEventListener("click", () => $("file").click());
 $("file").addEventListener("change", async () => {
   const file = $("file").files[0];
@@ -925,9 +1031,10 @@ $("file").addEventListener("change", async () => {
     const ids = typeof saved?.jurisdiccion === "string" ? saved.jurisdiccion.split("+") : [];
     if (saved?.formato !== "257-plan-local-v1" || !ids.length || !ids.every(id => catalog.has(id)) ||
         !["radios", "circuitos"].includes(saved.unidad) || !Number.isInteger(saved.bancas)) throw new Error();
-    const previous = seatsCustom;
-    seatsCustom = saved.bancas === defaultSeats(ids) ? null : saved.bancas;
-    if (!await load(ids, saved.unidad, saved)) seatsCustom = previous;
+    const previous = {carve, seatsCustom};
+    carve = saved.tipo === "provincias";
+    seatsCustom = saved.bancas === defaultCount(ids) ? null : saved.bancas;
+    if (!await load(ids, saved.unidad, saved)) ({carve, seatsCustom} = previous);
   } catch {
     $("activity").textContent = "El archivo no es un plan de Distrito 257.";
   }
@@ -955,8 +1062,9 @@ window.recibirCatalogo = data => {
   const chamber = Number(location.get("camara"));
   if (Number.isInteger(chamber) && chamber > 0) camara = chamber;
   try { computeSeats(); } catch { camara = 257; repartoId = "b257"; computeSeats(); }
+  carve = location.get("armar") === "provincias";
   const custom = Number(location.get("distritos"));
-  if (Number.isInteger(custom) && custom > 0 && custom !== defaultSeats(ids)) seatsCustom = custom;
+  if (Number.isInteger(custom) && custom > 0 && custom !== defaultCount(ids)) seatsCustom = custom;
   const requestedView = location.get("vista");
   view = displayModes.has(requestedView) ? requestedView : "assignment";
   voteMethod = location.get("estimacion") === "circuit" ? "circuit" : "geo";

@@ -37,7 +37,7 @@ const repartoPorId = new Map(REPARTOS.map(item => [item.id, item]));
 function repartir(regla, poblacion, total = 257) {
   const ids = Object.keys(poblacion);
   if (regla.fijo) return {...regla.fijo};
-  const minimo = id => Math.max(regla.piso, regla.garantia ? BANCAS_1983[id] : 0);
+  const minimo = id => Math.max(regla.piso, regla.garantia ? BANCAS_1983[id] ?? 0 : 0);
   const bancas = (id, proporcional) => Math.max(proporcional + regla.mas, minimo(id));
   if (regla.cociente) {
     const q = regla.cociente;
@@ -68,7 +68,7 @@ function repartir(regla, poblacion, total = 257) {
 function minimoDeCamara(regla, poblacion) {
   if (!regla.ajustado) return null;
   return Object.keys(poblacion).reduce((sum, id) =>
-    sum + Math.max(regla.mas, regla.piso, regla.garantia ? BANCAS_1983[id] : 0), 0);
+    sum + Math.max(regla.mas, regla.piso, regla.garantia ? BANCAS_1983[id] ?? 0 : 0), 0);
 }
 
 if (typeof module !== "undefined") module.exports = {REPARTOS, repartir, minimoDeCamara, BANCAS_1983};
