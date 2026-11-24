@@ -67,7 +67,10 @@ const map = new MapaDistritos($("canvas"), {
   },
   paint: (indices, type) => {
     let units = indices;
-    if (plan.base.modo === "radios" && $("group").value === "group") {
+    if ($("group").value === "dept") {
+      const depts = new Set(indices.map(ix => plan.units[ix][7]));
+      units = [...depts].flatMap(dept => plan.deptGroups.get(dept) ?? []);
+    } else if (plan.base.modo === "radios" && $("group").value === "group") {
       const groups = new Set(indices.map(ix => plan.units[ix][1]));
       units = [...groups].flatMap(group => plan.groups.get(group));
     }
@@ -146,7 +149,8 @@ function showHover(index) {
   if (!unit) { $("hover").textContent = ""; return; }
   const kind = plan.base.modo === "radios" ? "Radio" : "Circuito";
   const district = plan.districts[index];
-  const info = [`${kind} ${unit[0]}`, `${number(unit[2])} hab.`, districtName(district)];
+  const info = [`${kind} ${unit[0]}`, plan.base.deptos?.[unit[7]], `${number(unit[2])} hab.`, districtName(district)]
+    .filter(Boolean);
   if (plan.locked.has(district)) info.push("Bloqueado");
   if (lean) {
     const result = view === "lean" && district ?
@@ -309,7 +313,7 @@ function mergeBases(list, pairs) {
     for (const unit of base.unidades) {
       unidades.push([unit[0], unit[1], unit[2], unit[3] ? unit[3] + d0 : 0,
         remapVotes(unit[4], merged.maps[m], merged.width),
-        unit[5].map(ring => ring.map((value, k) => value + (k % 2 ? dy : dx))), unit[6]]);
+        unit[5].map(ring => ring.map((value, k) => value + (k % 2 ? dy : dx))), unit[6], unit[7]]);
     }
     for (const value of base.vecinos) vecinos.push(piece(value));
     for (const owner of base.partesExtra ?? []) partesExtra.push(owner + u0);
@@ -330,7 +334,7 @@ function mergeBases(list, pairs) {
     id: list.map(base => base.id).join("+"), modo: list[0].modo, nombre: unionName(list.map(base => base.id)),
     bancas: districts, bancasBase: districts, version: list.map(base => base.version).join("+"),
     origen: [left, top], ancho, alto, escala: Math.cos(middle), elecciones: merged.elecciones,
-    unidades, vecinos, partesExtra, miembros,
+    unidades, vecinos, partesExtra, miembros, deptos: Object.assign({}, ...list.map(base => base.deptos)),
     geolocalizados: list.reduce((sum, base) => sum + base.geolocalizados, 0)
   };
 }
@@ -483,6 +487,9 @@ async function load(ids, mode, savedPlan = null) {
     $("group").selectedIndex = 0;
     $("group").options[0].textContent = mode === "radios" ? "Un radio" : "Un circuito";
     $("group").options[1].hidden = mode === "circuitos";
+    $("group").options[2].textContent = ids.every(id => id === "01") ? "Una comuna" :
+      ids.every(id => id === "02") ? "Un partido" : ids.every(id => ["01", "02"].includes(id)) ? "Partido o comuna" :
+      ids.includes("02") || ids.includes("01") ? "Departamento, partido o comuna" : "Un departamento";
     updateElection(previous);
     $("map-view").value = view;
     $("quota").textContent = number(plan.quota);

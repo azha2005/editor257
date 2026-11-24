@@ -7,7 +7,11 @@ primero. El mapa, las cifras y el editor funcionan sin conexión y sin servidor.
    de partida es el plan neutral de 257 que procura mantener juntos los
    circuitos. El modo con los polígonos de circuito arranca vacío.
 2. Elegí un distrito de la lista y hacé clic o arrastrá con **Pintar**. Con
-   **Circuito vinculado**, cada radio tocado lleva consigo todo su grupo. Para
+   **Circuito vinculado**, cada radio tocado lleva consigo todo su grupo. Con
+   **Departamento** (partido en Buenos Aires, comuna en CABA) se pinta el
+   departamento entero, en radios o en circuitos: los radios usan su código
+   INDEC 2022 y cada circuito va al departamento donde vive la mayor parte de
+   su población. El nombre aparece al pasar el cursor. Para
    sacar del plan una unidad, elegí **Borrar**. La rueda controla el zoom y
    **Mover** permite desplazar el mapa o seleccionar el distrito bajo el cursor.
 3. **Deshacer** y **Rehacer** operan por trazo completo. **Inicio del plan**

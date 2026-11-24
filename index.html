@@ -11,7 +11,7 @@
     document.documentElement.dataset.theme = ["light", "dark"].includes(storedTheme) ? storedTheme :
       (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
   </script>
-  <link rel="stylesheet" href="estilo.css?v=3c07b0dee2">
+  <link rel="stylesheet" href="estilo.css?v=be8f262498">
 </head>
 <body>
   <div class="shell">
@@ -93,6 +93,7 @@
               <select id="group" aria-label="Unidad del pincel" title="Unidad del pincel" disabled>
                 <option value="one">Un radio</option>
                 <option value="group">Circuito vinculado</option>
+                <option value="dept">Departamento</option>
               </select>
               <select id="brush" aria-label="Tamaño del pincel" title="Tamaño del pincel" disabled>
                 <option value="0">Punto</option>
@@ -207,13 +208,13 @@
       </div>
     </form>
   </dialog>
-  <script src="plan.js?v=3c07b0dee2" defer></script>
-  <script src="mapa.js?v=3c07b0dee2" defer></script>
-  <script src="lean.js?v=3c07b0dee2" defer></script>
-  <script src="reparto.js?v=3c07b0dee2" defer></script>
-  <script src="export.js?v=3c07b0dee2" defer></script>
-  <script src="datos/colores.js?v=3c07b0dee2" defer></script>
-  <script src="app.js?v=3c07b0dee2" defer></script>
-  <script src="datos/catalogo.js?v=3c07b0dee2" defer></script>
+  <script src="plan.js?v=be8f262498" defer></script>
+  <script src="mapa.js?v=be8f262498" defer></script>
+  <script src="lean.js?v=be8f262498" defer></script>
+  <script src="reparto.js?v=be8f262498" defer></script>
+  <script src="export.js?v=be8f262498" defer></script>
+  <script src="datos/colores.js?v=be8f262498" defer></script>
+  <script src="app.js?v=be8f262498" defer></script>
+  <script src="datos/catalogo.js?v=be8f262498" defer></script>
 </body>
 </html>

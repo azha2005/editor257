@@ -28,9 +28,13 @@ class PlanDistritos {
     this.stroke = null;
     this.population = this.units.reduce((sum, unit) => sum + unit[2], 0);
     this.quota = this.population / base.bancas;
+    this.deptGroups = new Map();
     this.units.forEach((unit, index) => {
       if (!this.groups.has(unit[1])) this.groups.set(unit[1], []);
       this.groups.get(unit[1]).push(index);
+      if (unit[7] === undefined) return;
+      if (!this.deptGroups.has(unit[7])) this.deptGroups.set(unit[7], []);
+      this.deptGroups.get(unit[7]).push(index);
     });
     this.useVotes(method, atlas);
   }
