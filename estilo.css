@@ -124,7 +124,7 @@ a:hover { color: var(--accent); }
 .tool-cluster:not(:first-child) { padding-left: 8px; border-left: 1px solid var(--rule); }
 .tool-cluster select { max-width: 160px; padding-inline: 4px; }
 .map-view { font-size: 12px; color: var(--muted); white-space: nowrap; }
-.map-view select { color: var(--ink); font-size: 14px; }
+.map-view select { color: var(--ink); font-size: 14px; max-width: 184px; }
 .history { margin-left: auto; }
 .lean-key { padding: 8px 12px; color: var(--muted); background: var(--paper); font-size: 12px; border-bottom: 1px solid var(--rule); }
 .lean-key p { margin-bottom: 4px; }
@@ -196,6 +196,8 @@ tr:hover:not(.active) { background: var(--paper); }
 #contiguity-overview { margin-left: 4px; font-size: 12px; font-weight: 400; }
 #district-meta.warning { color: var(--warning); }
 .plan-review > button { margin: 8px 0 4px; font-size: 12px; }
+#fragment-locator { margin: 8px 0; font-size: 12px; }
+#fragment-choice { display: block; width: 100%; margin: 4px 0; }
 #review-issues { margin: 8px 0 0; padding: 0; max-height: 240px; overflow-y: auto; list-style: none; }
 #review-issues li { display: flex; align-items: center; gap: 8px; padding: 4px 0; border-top: 1px solid var(--rule); font-size: 12px; }
 #review-issues button { flex: 0 0 auto; }

@@ -10,6 +10,7 @@
 // pedazos del mismo distrito queda una línea más fina.
 
 const exportTolerance = 30;  // unidades del mapa (metros Mercator): unos 20 a 25 m
+const exportSize = 1600;
 
 function distanceToSegment(px, py, ax, ay, bx, by) {
   const dx = bx - ax, dy = by - ay;
@@ -71,7 +72,7 @@ function chainLines(lines) {
   return paths;
 }
 
-function exportarPlan({plan, map, fill, size = 1600, departamentos = false}) {
+function exportarPlan({plan, map, fill, size = exportSize, departamentos = false}) {
   const {ancho, alto} = plan.base;
   const scale = size / Math.max(ancho, alto);
   const width = Math.ceil(ancho * scale), height = Math.ceil(alto * scale);
@@ -208,21 +209,31 @@ ${labels.join("\n")}
 `;
 }
 
-function svgToPng(svg, pixelRatio = 2) {
+function loadSvgImage(svg) {
   return new Promise((resolve, reject) => {
-    const [, w, h] = svg.match(/width="(\d+)" height="(\d+)"/).map(Number);
-    const ratio = Math.min(pixelRatio, 8192 / Math.max(w, h));
     const url = URL.createObjectURL(new Blob([svg], {type: "image/svg+xml"}));
     const image = new Image();
     image.onload = () => {
-      const canvas = document.createElement("canvas");
-      canvas.width = Math.round(w * ratio);
-      canvas.height = Math.round(h * ratio);
-      canvas.getContext("2d").drawImage(image, 0, 0, canvas.width, canvas.height);
       URL.revokeObjectURL(url);
-      canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error("No se pudo crear el PNG.")), "image/png");
+      resolve(image);
     };
-    image.onerror = () => { URL.revokeObjectURL(url); reject(new Error("No se pudo dibujar el SVG.")); };
+    image.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("No se pudo dibujar el SVG."));
+    };
     image.src = url;
+  });
+}
+
+async function svgToPng(svg, pixelRatio = 2) {
+  const image = await loadSvgImage(svg);
+  const {naturalWidth: width, naturalHeight: height} = image;
+  const ratio = Math.min(pixelRatio, 8192 / Math.max(width, height));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(width * ratio);
+  canvas.height = Math.round(height * ratio);
+  canvas.getContext("2d").drawImage(image, 0, 0, canvas.width, canvas.height);
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error("No se pudo dibujar el PNG.")), "image/png");
   });
 }

@@ -179,13 +179,133 @@ class PlanDistritos {
   }
 
   componentCounts() {
+    return this.components().counts;
+  }
+
+  circuitLandmasses() {
+    if (this.landmasses) return this.landmasses;
+    const roots = new Int32Array(this.pieceOwners.length).fill(-1);
+    const areas = [];
+    const locations = this.base.lugaresPartes;
+    for (let i = 0; i < roots.length; i++) {
+      if (roots[i] >= 0) continue;
+      const root = areas.length;
+      const queue = [i];
+      let area = 0;
+      roots[i] = root;
+      for (let cursor = 0; cursor < queue.length; cursor++) {
+        const piece = queue[cursor];
+        area += locations?.[3 * piece + 2] ?? 1;
+        for (const other of this.neighbors[piece]) {
+          if (roots[other] >= 0) continue;
+          roots[other] = root;
+          queue.push(other);
+        }
+      }
+      areas.push(area);
+    }
+    const primary = new Map();
+    const split = new Set();
+    const ranks = new Int32Array(areas.length);
+    const ordered = [...areas.keys()].sort((a, b) => areas[b] - areas[a] || a - b);
+    ordered.forEach((root, rank) => { ranks[root] = rank; });
+    for (let piece = 0; piece < roots.length; piece++) {
+      const circuit = this.units[this.pieceOwners[piece]][1];
+      if (!circuit) continue;
+      const root = roots[piece];
+      const before = primary.get(circuit);
+      if (before === root) continue;
+      if (before !== undefined) split.add(circuit);
+      if (before === undefined || ranks[root] < ranks[before]) primary.set(circuit, root);
+    }
+    for (const circuit of primary.keys()) if (!split.has(circuit)) primary.delete(circuit);
+    const islandAreas = new Float64Array(areas.length);
+    for (const piece of this.base.partesInsulares ?? []) {
+      islandAreas[roots[piece]] += locations?.[3 * piece + 2] ?? 1;
+    }
+    const islands = new Set(ordered.filter(root => islandAreas[root] > areas[root] / 2));
+    this.landmasses = {roots, ranks, primary, islands};
+    return this.landmasses;
+  }
+
+  joinCircuitIslands(groups, geography) {
+    const {roots, ranks, primary, islands} = geography;
+    if (groups.length < 2 || (!primary.size && !islands.size)) return groups;
+    const locations = this.base.lugaresPartes;
+    const circuits = new Map(), departments = new Map(), provinces = new Map(), representatives = new Map();
+    const share = (map, key, area) => { if (key) map.set(key, (map.get(key) ?? 0) + area); };
+    const prefer = (map, key, index, root, area) => {
+      const prior = map.get(key);
+      if (!prior || ranks[root] < ranks[prior.root] || (root === prior.root && area > prior.area)) {
+        map.set(key, {index, root, area});
+      }
+    };
+    const affiliations = groups.map((pieces, index) => {
+      const root = roots[pieces[0]];
+      const onMain = new Map();
+      const onIsland = new Map();
+      const byDepartment = new Map();
+      const byProvince = new Map();
+      let localCircuit = false;
+      let size = 0;
+      for (const piece of pieces) {
+        const unit = this.units[this.pieceOwners[piece]];
+        const circuit = unit[1];
+        const area = locations?.[3 * piece + 2] ?? 1;
+        size += area;
+        const mainland = primary.get(circuit);
+        if (mainland !== undefined) share(root === mainland ? onMain : onIsland, circuit, area);
+        if (circuit && (mainland === undefined || root === mainland)) localCircuit = true;
+        if (islands.size) {
+          share(byDepartment, unit[7], area);
+          share(byProvince, circuit?.slice(0, 2), area);
+        }
+      }
+      for (const [key, area] of onMain) prefer(circuits, key, index, root, area);
+      for (const [key, area] of byDepartment) prefer(departments, key, index, root, area);
+      for (const [key, area] of byProvince) prefer(provinces, key, index, root, area);
+      prefer(representatives, root, index, root, size);
+      return {root, onIsland, byDepartment, byProvince, localCircuit};
+    });
+    const targetFor = (shares, candidates, root) => {
+      let target;
+      let best = 0;
+      for (const [key, area] of shares) {
+        const anchor = candidates.get(key);
+        if (anchor && ranks[anchor.root] < ranks[root] && area > best) {
+          target = anchor.index;
+          best = area;
+        }
+      }
+      return target;
+    };
+    // Se conecta una sola pieza por masa de tierra y asignación. Esto conserva
+    // los cortes de un distrito dentro de una misma isla o en el continente.
+    const parent = affiliations.map(({root, onIsland, byDepartment, byProvince, localCircuit}, index) => {
+      if (representatives.get(root).index !== index) return index;
+      const circuit = targetFor(onIsland, circuits, root);
+      if (circuit !== undefined) return circuit;
+      if (!localCircuit || !islands.has(root)) return index;
+      return targetFor(byDepartment, departments, root) ?? targetFor(byProvince, provinces, root) ?? index;
+    });
+    const joined = new Map();
+    groups.forEach((pieces, index) => {
+      let target = index;
+      while (parent[target] !== target) target = parent[target];
+      if (!joined.has(target)) joined.set(target, []);
+      joined.get(target).push(pieces);
+    });
+    return [...joined.values()].map(parts => parts.length === 1 ? parts[0] : parts.flat());
+  }
+
+  components() {
     if (this.contiguity) return this.contiguity;
     const visited = new Uint8Array(this.pieceOwners.length);
     const counts = new Uint32Array(this.base.bancas + 1);
+    const groups = Array.from(counts, () => []);
     for (let i = 0; i < this.pieceOwners.length; i++) {
       const district = this.districts[this.pieceOwners[i]];
       if (visited[i] || !district) continue;
-      counts[district]++;
       const queue = [i];
       visited[i] = 1;
       for (let cursor = 0; cursor < queue.length; cursor++) {
@@ -196,9 +316,58 @@ class PlanDistritos {
           }
         }
       }
+      groups[district].push(queue);
     }
-    this.contiguity = counts;
-    return counts;
+    const geography = this.circuitLandmasses();
+    const connected = groups.map(parts => this.joinCircuitIslands(parts, geography));
+    connected.forEach((parts, district) => { counts[district] = parts.length; });
+    this.contiguity = {counts, groups: connected, geographicGroups: groups};
+    return this.contiguity;
+  }
+
+  reviewLocations() {
+    const locations = this.base.lugaresPartes;
+    if (!locations) return [];
+    const exterior = new Set(this.base.exteriorPartes.map(([id]) => id));
+    const result = [];
+    const {groups, geographicGroups} = this.components();
+    const describe = (pieces, district) => {
+      let area = 0;
+      let anchor = pieces[0];
+      for (const piece of pieces) {
+        const size = locations[3 * piece + 2];
+        area += size;
+        if (size > locations[3 * anchor + 2]) anchor = piece;
+      }
+      return {district, pieces, area, anchor};
+    };
+    groups.forEach((parts, district) => {
+      const ranked = parts.map(pieces => describe(pieces, district)).sort((a, b) => b.area - a.area);
+      const fragments = new Map(ranked.slice(1).map((component, index) =>
+        [component.pieces, {...component, fragment: index + 1, host: null}]));
+      const enclaves = [];
+      for (const pieces of geographicGroups[district]) {
+        let host = null;
+        let enclosed = true;
+        for (const piece of pieces) {
+          if (exterior.has(piece)) { enclosed = false; break; }
+          for (const other of this.neighbors[piece]) {
+            const neighbor = this.districts[this.pieceOwners[other]];
+            if (neighbor === district) continue;
+            if (!neighbor || (host !== null && neighbor !== host)) { enclosed = false; break; }
+            host = neighbor;
+          }
+          if (!enclosed) break;
+        }
+        if (enclosed && host) {
+          const fragment = fragments.get(pieces);
+          if (fragment) fragment.host = host;
+          else enclaves.push({...describe(pieces, district), fragment: 0, host});
+        }
+      }
+      result.push(...fragments.values(), ...enclaves);
+    });
+    return result;
   }
 
   serialize() {

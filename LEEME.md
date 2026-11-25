@@ -33,6 +33,19 @@ y el listado se actualiza al terminar cada trazo. Elegí un distrito de la
 lista para ubicarlo en el mapa. El botón **Claro** / **Oscuro** cambia
 el tema y recuerda la elección en el navegador.
 
+Dentro de **Revisar plan**, **Ubicar fragmentos y enclaves** centra el mapa
+en la primera ubicación y permite recorrer las demás. El marcador señala
+la pieza separada y la nota indica su radio o circuito. Los fragmentos
+se enumeran por superficie, después de la pieza principal. Se marca como
+enclave un componente rodeado por una sola asignación distinta, con el
+borde cerrado en las capas seleccionadas.
+
+**Color del mapa → Vista de exportación** muestra el mismo dibujo que
+sale en el SVG y el PNG. Conserva el color de la vista que estaba activa
+y el selector **Solo distritos / Con departamentos**. Usá **Mover** y
+el zoom para inspeccionar la vista. **Pintar** o **Borrar** vuelve a la
+vista editable.
+
 **Reparto y uniones**, debajo de los selectores, cambia cuántos distritos
 tiene cada jurisdicción. Los repartos siguen la Ley 22.847 («ley Bignone»)
 con el Censo 2022: un diputado cada 161.000 habitantes o fracción de 80.500,
@@ -153,8 +166,24 @@ donde existe cobertura. El resto de las elecciones está adaptado a los
 límites de 2025. La población por radio es la del Censo 2022 en viviendas
 particulares. La de circuito se estima escalando el padrón.
 
-El recuento de fragmentos usa segmentos de borde compartidos en la geometría base,
-entre polígonos individuales. Las conexiones por punto o por puente quedan fuera.
+La continuidad usa tramos de borde y superficies compartidas. Una isla
+se cuenta junto con la parte de su circuito en una masa de tierra mayor,
+siempre que tengan la misma asignación. Para islas identificadas en la
+cartografía del IGN se busca además un destino con la misma asignación
+en el departamento o la jurisdicción de origen. Se vincula una sola pieza
+por masa de tierra y asignación, así que un corte dentro de una misma
+isla o en el continente sigue contando. En geografía de radios se usa el
+vínculo aproximado de la base con los circuitos. Los enclaves se comprueban
+sobre los bordes geográficos.
+
+La fuente nacional de islas es la capa poligonal **Isla** del [IGN](https://www.ign.gob.ar/capas-sig/).
+Para regenerar, guardá la descarga WFS de `ign:areas_de_zona_costera_BA030`
+en formato `shape-zip` y EPSG:4326 como
+`geometria/cartografia_argentina/ign_actual/isla.zip`. El constructor
+identifica las piezas mayormente superpuestas con una isla del IGN.
+Entre jurisdicciones se admite una pequeña diferencia entre trazados
+cuando los bordes corren juntos a lo largo de un tramo. Un contacto por
+esquina o un puente no cuenta como borde compartido.
 Las líneas del mapa se simplifican
 para dibujar más rápido y detectar la unidad bajo el pincel. Las asignaciones y
 las cuentas conservan todos los identificadores, población y votos fuente.

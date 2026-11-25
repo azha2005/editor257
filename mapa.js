@@ -8,6 +8,8 @@ function unionBounds(a, b) {
 }
 
 const emptyBounds = () => [Infinity, Infinity, -Infinity, -Infinity];
+// Un solo Path2D con todos los radios visibles puede superar el límite de rasterización.
+const pathBatchVertices = 24000;
 
 class MapaDistritos {
   constructor(canvas, events) {
@@ -40,12 +42,17 @@ class MapaDistritos {
 
   show(plan) {
     this.plan = plan;
+    this.exportImage = null;
+    this.reviewAnchor = null;
+    this.partBounds = new Map((plan.base.cajasPartes ?? []).map(([id, ...box]) => [id, box]));
     this.grid = new Map();
     this.paths = new Array(plan.units.length);
+    this.vertices = new Uint32Array(plan.units.length);
     this.step = Math.max(plan.base.ancho, plan.base.alto) / 64;
     this.bounds = plan.units.map((unit, index) => {
       const b = emptyBounds();
       for (const ring of unit[5]) {
+        this.vertices[index] += ring.length / 2;
         for (let i = 0; i < ring.length; i += 2) {
           b[0] = Math.min(b[0], ring[i]);
           b[1] = Math.min(b[1], ring[i + 1]);
@@ -116,6 +123,12 @@ class MapaDistritos {
       if (!Number.isFinite(combined[0])) return;
       box = combined;
     }
+    this.clearReviewLocation();
+    this.fitBox(box, district);
+  }
+
+  fitBox(box, district) {
+    const {ancho, alto} = this.plan.base;
     const width = this.width || this.canvas.clientWidth;
     const height = this.height || this.canvas.clientHeight;
     const padding = Math.min(74, width * .18, height * .18);
@@ -125,6 +138,20 @@ class MapaDistritos {
     this.fittedDistrict = district;
     this.camera = {x: width / 2 - (box[0] + box[2]) * z / 2,
                    y: height / 2 - (box[1] + box[3]) * z / 2, z};
+    this.request();
+  }
+
+  locateParts({pieces, anchor}) {
+    const box = pieces.reduce((combined, id) =>
+      unionBounds(combined, this.partBounds.get(id) ?? this.bounds[this.plan.pieceOwners[id]]), emptyBounds());
+    const offset = 3 * anchor;
+    this.reviewAnchor = [this.plan.base.lugaresPartes[offset], this.plan.base.lugaresPartes[offset + 1]];
+    this.fitBox(box);
+  }
+
+  clearReviewLocation() {
+    if (!this.reviewAnchor) return;
+    this.reviewAnchor = null;
     this.request();
   }
 
@@ -183,54 +210,95 @@ class MapaDistritos {
       }
       ctx.stroke();
       ctx.setTransform(c.z * dpr, 0, 0, c.z * dpr, c.x * dpr, c.y * dpr);
-      const extents = [...this.world(-2, -2), ...this.world(width + 2, height + 2)];
-      const visible = this.candidates(extents);
-      const grouped = new Map();
-      const detailed = this.bounds.length < 7000 || c.z / this.baseScale > 3;
-      for (const index of visible) {
-        const district = this.plan.districts[index];
-        const fill = color.fill ? color.fill(index, district) : color.district(district);
-        const emphasis = district === color.active;
-        const key = color.fill ? `${emphasis}:${fill}` : district;
-        if (!grouped.has(key)) grouped.set(key, {fill, emphasis, path: new Path2D()});
-        grouped.get(key).path.addPath(this.path(index));
-      }
-      ctx.lineWidth = (detailed ? .65 : .45) / c.z;
-      ctx.lineJoin = "round";
-      ctx.strokeStyle = color.boundary;
-      const layers = [...grouped.values()].sort((a, b) => Number(a.emphasis) - Number(b.emphasis));
-      for (const {fill, path} of layers) {
-        ctx.fillStyle = fill;
-        ctx.fill(path, "evenodd");
-        ctx.stroke(path);
-      }
-      for (const {emphasis, path} of layers) {
-        if (!emphasis) continue;
-        ctx.strokeStyle = color.hover;
-        ctx.globalAlpha = .6;
-        ctx.lineWidth = .95 / c.z;
-        ctx.stroke(path);
-        ctx.globalAlpha = 1;
-      }
-      if (this.hoverIndex >= 0) {
-        const hover = this.hoverPath();
-        ctx.fillStyle = color.hoverFill;
-        ctx.fill(hover, "evenodd");
-        // Solo el contorno: el trazo se recorta afuera del grupo, así no se ven los bordes internos
-        // entre los radios de un circuito o departamento.
-        const outside = new Path2D();
-        outside.rect(extents[0], extents[1], extents[2] - extents[0], extents[3] - extents[1]);
-        outside.addPath(hover);
-        ctx.save();
-        ctx.clip(outside, "evenodd");
-        ctx.strokeStyle = color.hover;
-        ctx.lineWidth = 4 / c.z;
-        ctx.stroke(hover);
-        ctx.restore();
+      if (color.preview && this.exportImage) {
+        const {image, scale} = this.exportImage;
+        ctx.drawImage(image, 0, 0, image.naturalWidth / scale, image.naturalHeight / scale);
+      } else {
+        this.drawUnits(color);
       }
       this.events.scale(c.z / this.plan.base.escala);
+      this.drawReviewMarker(color);
     }
     ctx.setTransform(1, 0, 0, 1, 0, 0);
+  }
+
+  drawUnits(color) {
+    const ctx = this.ctx;
+    const c = this.camera;
+    const extents = [...this.world(-2, -2), ...this.world(this.width + 2, this.height + 2)];
+    const visible = this.candidates(extents);
+    const grouped = new Map();
+    const detailed = this.bounds.length < 7000 || c.z / this.baseScale > 3;
+    for (const index of visible) {
+      const district = this.plan.districts[index];
+      const fill = color.fill ? color.fill(index, district) : color.district(district);
+      const emphasis = district === color.active;
+      const key = color.fill ? `${emphasis}:${fill}` : district;
+      if (!grouped.has(key)) grouped.set(key, {fill, emphasis, paths: [], vertices: 0});
+      const layer = grouped.get(key);
+      const vertices = this.vertices[index];
+      if (!layer.paths.length || layer.vertices + vertices > pathBatchVertices) {
+        layer.paths.push(new Path2D());
+        layer.vertices = 0;
+      }
+      layer.paths.at(-1).addPath(this.path(index));
+      layer.vertices += vertices;
+    }
+    ctx.lineWidth = (detailed ? .65 : .45) / c.z;
+    ctx.lineJoin = "round";
+    ctx.strokeStyle = color.boundary;
+    const layers = [...grouped.values()].sort((a, b) => Number(a.emphasis) - Number(b.emphasis));
+    for (const {fill, paths} of layers) {
+      ctx.fillStyle = fill;
+      for (const path of paths) ctx.fill(path, "evenodd");
+      for (const path of paths) ctx.stroke(path);
+    }
+    for (const {emphasis, paths} of layers) {
+      if (!emphasis) continue;
+      ctx.strokeStyle = color.hover;
+      ctx.globalAlpha = .6;
+      ctx.lineWidth = .95 / c.z;
+      for (const path of paths) ctx.stroke(path);
+      ctx.globalAlpha = 1;
+    }
+    if (this.hoverIndex >= 0) {
+      const hover = this.hoverPath();
+      ctx.fillStyle = color.hoverFill;
+      ctx.fill(hover, "evenodd");
+      // Solo el contorno: el trazo se recorta afuera del grupo, así no se ven los bordes internos
+      // entre los radios de un circuito o departamento.
+      const outside = new Path2D();
+      outside.rect(extents[0], extents[1], extents[2] - extents[0], extents[3] - extents[1]);
+      outside.addPath(hover);
+      ctx.save();
+      ctx.clip(outside, "evenodd");
+      ctx.strokeStyle = color.hover;
+      ctx.lineWidth = 4 / c.z;
+      ctx.stroke(hover);
+      ctx.restore();
+    }
+  }
+
+  drawReviewMarker(color) {
+    if (this.reviewAnchor) {
+      const ctx = this.ctx;
+      const c = this.camera;
+      const dpr = this.dpr;
+      const x = c.x + this.reviewAnchor[0] * c.z;
+      const y = c.y + this.reviewAnchor[1] * c.z;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.beginPath();
+      ctx.arc(x, y, 10, 0, 2 * Math.PI);
+      ctx.fillStyle = color.hover;
+      ctx.strokeStyle = color.water;
+      ctx.lineWidth = 3;
+      ctx.fill();
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(x, y, 3, 0, 2 * Math.PI);
+      ctx.fillStyle = color.water;
+      ctx.fill();
+    }
   }
 
   point(event) {
@@ -293,7 +361,9 @@ class MapaDistritos {
   // Dos dedos: zoom y desplazamiento. Si el primero ya había empezado a pintar, el trazo se descarta.
   startPinch() {
     const g = this.gesture;
-    if (g && g.tool !== "pan" && g.tool !== "pinch") this.events.cancel();
+    if (g && g.tool !== "pan" && g.tool !== "pinch") {
+      this.events.cancel("Trazo descartado: dos dedos mueven y acercan el mapa.");
+    }
     const [a, b] = [...this.touches.values()];
     this.gesture = {
       tool: "pinch", ids: [...this.touches.keys()], distance: Math.max(1, Math.hypot(a[0] - b[0], a[1] - b[1])),
@@ -386,8 +456,10 @@ class MapaDistritos {
         const index = this.hit(...g.p);
         if (index >= 0) this.events.inspect(index);
       }
-    } else {
+    } else if (event.type === "pointerup") {
       this.events.end();
+    } else {
+      this.events.cancel("Se interrumpió el trazo y se descartaron sus cambios.");
     }
     this.canvas.classList.remove("dragging");
   }

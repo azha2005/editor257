@@ -22,7 +22,7 @@ let colors = readMapColors();
 
 const controls = ["province", "mode", "election", "group", "brush", "map-view", "download", "reset",
   "seats", "export-lines", "export-svg", "export-png", "reparto", "camara", "seat-count", "seat-default", "join-apply", "join-amba", "join-clear", "active-district", "carve-amba", "carve-apply"];
-const displayModes = new Set(["assignment", "unit", "lean", "unassigned"]);
+const displayModes = new Set(["assignment", "unit", "lean", "unassigned", "export"]);
 const pending = new Map();
 const localPlans = new Map();
 const atlases = new Map();
@@ -37,10 +37,14 @@ let seatTable = {};
 let plan;
 let election;
 let view = "assignment";
+let exportBasis = "assignment";
+let exportPreview = null;
 let voteMethod = "geo";
 let lean = null;
 let active = 1;
 let tool = "paint";
+let brushPreference = "one";
+const visitedPlanSizes = new Map();
 let switching = false;
 let rows = [];
 const pageSize = 7;
@@ -51,6 +55,8 @@ let saveMessage = "Guardado en este navegador";
 let blockedStroke = false;
 let overviewCounts = null;
 let reviewedCounts = null;
+let locatedCounts = null;
+let reviewLocations = [];
 
 const map = new MapaDistritos($("canvas"), {
   style: mapStyle,
@@ -61,8 +67,8 @@ const map = new MapaDistritos($("canvas"), {
     blockedStroke = false;
     plan.begin();
   },
-  cancel: () => {
-    if (plan.abort()) $("activity").textContent = "Trazo descartado: dos dedos mueven y acercan el mapa.";
+  cancel: message => {
+    if (plan.abort()) $("activity").textContent = message;
     redraw();
   },
   paint: (indices, type) => {
@@ -139,6 +145,7 @@ $("theme-toggle").addEventListener("click", () => {
 labelThemeToggle();
 
 function mapStyle() {
+  if (view === "export") return {...colors, preview: true};
   if (view === "unassigned") {
     const assigned = color("review-assigned");
     const unassigned = color("review-unassigned");
@@ -161,6 +168,11 @@ function showHover(index) {
   const district = plan.districts[index];
   const info = [`${kind} ${unit[0]}`, plan.base.deptos?.[unit[7]], `${number(unit[2])} hab.`, districtName(district)]
     .filter(Boolean);
+  if (tool !== "pan" && $("group").value !== "one") {
+    const {indices} = brushGroup(index);
+    const label = $("group").value === "group" ? `Circuito vinculado ${unit[1]}` : "Grupo del pincel";
+    info.push(`${label} · ${number(indices.length)} ${indices.length === 1 ? "unidad" : "unidades"}`);
+  }
   if (plan.locked.has(district)) info.push("Bloqueado");
   if (lean) {
     const result = view === "lean" && district ?
@@ -216,6 +228,7 @@ function setControls(enabled) {
   $("open").disabled = !enabled;
   $("lock-district").disabled = !enabled;
   $("find-unassigned").disabled = !enabled || !plan?.totals[0].units;
+  $("locate-fragments").disabled = !enabled || !plan?.base.lugaresPartes;
   $("undo").disabled = !enabled || !plan?.history.length;
   $("redo").disabled = !enabled || !plan?.future.length;
   $("camara").disabled = !enabled || !repartoPorId.get(repartoId)?.ajustado;
@@ -228,6 +241,14 @@ function saveKey(base) {
   if (base.tipo === "provincias") return `distrito257/${base.id}/${base.modo}/provincias/${base.bancas}`;
   const suffix = base.bancas === base.bancasBase ? "" : `/${base.bancas}`;
   return `distrito257/${base.id}/${base.modo}${suffix}`;
+}
+
+function planSizeKey(id, carving) {
+  return `${id}/${carving ? "provincias" : "distritos"}`;
+}
+
+function rememberPlanSize() {
+  visitedPlanSizes.set(planSizeKey(plan.base.id, carve), seatsCustom);
 }
 
 function restore(base) {
@@ -274,7 +295,7 @@ async function getBase(id, mode) {
 }
 
 async function getBorders(mode) {
-  if (!borders.has(mode)) borders.set(mode, (await getScript(`fronteras-${mode}`)).pares);
+  if (!borders.has(mode)) borders.set(mode, await getScript(`fronteras-${mode}`));
   return borders.get(mode);
 }
 
@@ -310,12 +331,15 @@ function remapVotes(row, map, width) {
 
 const earthRadius = 6378137;
 
-function mergeBases(list, pairs) {
+function mergeBases(list, {pares: pairs, contactos: contacts = []}) {
   const left = Math.min(...list.map(base => base.origen[0]));
   const top = Math.max(...list.map(base => base.origen[1]));
   const merged = mergeElections(list.map(base => base.elecciones));
   const total = list.reduce((sum, base) => sum + base.unidades.length, 0);
   const unidades = [], vecinos = [], partesExtra = [], pieces = new Map(), miembros = [];
+  const pieceCount = total + list.reduce((sum, base) => sum + (base.partesExtra?.length ?? 0), 0);
+  const locations = list.every(base => base.lugaresPartes) ? new Float64Array(3 * pieceCount) : null;
+  const boxes = [], islands = [], exterior = new Map();
   let units = 0, extras = 0, districts = 0, ancho = 0, alto = 0;
   list.forEach((base, m) => {
     const dx = Math.round(base.origen[0] - left), dy = Math.round(top - base.origen[1]);
@@ -328,6 +352,19 @@ function mergeBases(list, pairs) {
     }
     for (const value of base.vecinos) vecinos.push(piece(value));
     for (const owner of base.partesExtra ?? []) partesExtra.push(owner + u0);
+    for (const id of base.partesInsulares ?? []) islands.push(piece(id));
+    if (locations) {
+      for (let i = 0; i < base.lugaresPartes.length; i += 3) {
+        const offset = 3 * piece(i / 3);
+        locations[offset] = base.lugaresPartes[i] + dx;
+        locations[offset + 1] = base.lugaresPartes[i + 1] + dy;
+        locations[offset + 2] = base.lugaresPartes[i + 2];
+      }
+      for (const [id, x1, y1, x2, y2] of base.cajasPartes) {
+        boxes.push([piece(id), x1 + dx, y1 + dy, x2 + dx, y2 + dy]);
+      }
+      for (const [id, length] of base.exteriorPartes) exterior.set(piece(id), length);
+    }
     pieces.set(base.id, piece);
     miembros.push({id: base.id, desde: u0, hasta: u0 + n});
     units += n;
@@ -338,7 +375,14 @@ function mergeBases(list, pairs) {
   });
   for (let i = 0; i < pairs.length; i += 4) {
     const a = pieces.get(pairs[i]), b = pieces.get(pairs[i + 2]);
-    if (a && b) vecinos.push(a(pairs[i + 1]), b(pairs[i + 3]));
+    if (a && b) {
+      const first = a(pairs[i + 1]), second = b(pairs[i + 3]);
+      vecinos.push(first, second);
+      const shared = contacts[i / 4];
+      if (shared) {
+        for (const id of [first, second]) exterior.set(id, (exterior.get(id) ?? 0) - shared);
+      }
+    }
   }
   const middle = 2 * Math.atan(Math.exp((top - alto / 2) / earthRadius)) - Math.PI / 2;
   return {
@@ -346,6 +390,8 @@ function mergeBases(list, pairs) {
     bancas: districts, bancasBase: districts, version: list.map(base => base.version).join("+"),
     origen: [left, top], ancho, alto, escala: Math.cos(middle), elecciones: merged.elecciones,
     unidades, vecinos, partesExtra, miembros, deptos: Object.assign({}, ...list.map(base => base.deptos)),
+    lugaresPartes: locations, cajasPartes: boxes, exteriorPartes: [...exterior].filter(([, length]) => length > 1e-8),
+    partesInsulares: islands,
     geolocalizados: list.reduce((sum, base) => sum + base.geolocalizados, 0)
   };
 }
@@ -461,7 +507,11 @@ function showJurisdiction(ids) {
 async function load(ids, mode, savedPlan = null) {
   ids = [...new Set(ids)].sort();
   if (switching || !ids.length || !ids.every(id => catalog.has(id)) || !["radios", "circuitos"].includes(mode)) return;
-  if (map.gesture) return;
+  if (map.gesture) {
+    $("province").value = plan.base.id;
+    $("mode").value = plan.base.modo;
+    return;
+  }
   switching = true;
   setControls(false);
   $("map-message").hidden = false;
@@ -480,6 +530,7 @@ async function load(ids, mode, savedPlan = null) {
     const imported = savedPlan ? PlanDistritos.read(base, savedPlan) : null;
     if (imported && plan && saveKey(plan.base) === saveKey(base)) {
       plan.importAssignments(imported);
+      rememberPlanSize();
       saveChange("Plan abierto. Podés deshacer el cambio.");
       $("map-message").hidden = true;
       return true;
@@ -498,9 +549,10 @@ async function load(ids, mode, savedPlan = null) {
     $("mode").value = mode;
     $("radio-source-label").hidden = mode !== "radios";
     $("radio-source").value = method;
-    $("group").selectedIndex = 0;
     $("group").options[0].textContent = mode === "radios" ? "Un radio" : "Un circuito";
     $("group").options[1].hidden = mode === "circuitos";
+    $("group").options[1].disabled = mode === "circuitos";
+    $("group").value = mode === "circuitos" && brushPreference === "group" ? "one" : brushPreference;
     $("group").options[2].textContent = ids.every(id => id === "01") ? "Una comuna" :
       ids.every(id => id === "02") ? "Un partido" : ids.every(id => ["01", "02"].includes(id)) ? "Partido o comuna" :
       ids.includes("02") || ids.includes("01") ? "Departamento, partido o comuna" : "Un departamento";
@@ -526,10 +578,12 @@ async function load(ids, mode, savedPlan = null) {
     makeRows();
     refreshView();
     map.show(plan);
+    if (view === "export") setTool("pan");
     if (imported) saveChange("Plan abierto y guardado en este navegador.");
     redraw();
     paintApportion();
     setLocation();
+    rememberPlanSize();
     return true;
   } catch (error) {
     if (plan) {
@@ -554,6 +608,7 @@ function setLocation() {
     provincia: plan.base.id, unidad: plan.base.modo, eleccion: election.id, vista: view, estimacion: voteMethod
   });
   if (carve) fragment.set("armar", "provincias");
+  if (view === "export" && exportBasis !== "assignment") fragment.set("colorExport", exportBasis);
   if (repartoId !== "b257") fragment.set("reparto", repartoId);
   if (camara !== 257 && repartoPorId.get(repartoId).ajustado) fragment.set("camara", camara);
   if (seatsCustom !== null) fragment.set("distritos", plan.base.bancas);
@@ -713,16 +768,19 @@ function paintReview() {
     }
     $("contiguity-overview").textContent = `${number(contiguous)}/${number(plan.base.bancas)} contiguos`;
     $("contiguity-overview").classList.toggle("warning", fragmented > 0);
-    $("contiguity-status").textContent = `${number(contiguous)} contiguos · ${number(fragmented)} fragmentados · ${number(empty)} vacíos`;
+    $("contiguity-status").textContent = carve ?
+      `${number(contiguous)} contiguas · ${number(fragmented)} fragmentadas · ${number(empty)} vacías` :
+      `${number(contiguous)} contiguos · ${number(fragmented)} fragmentados · ${number(empty)} vacíos`;
   }
   if (!$("plan-review").open) return;
+  if (!$("fragment-locator").hidden) updateLocationList(counts);
   if (counts === reviewedCounts) return;
   reviewedCounts = counts;
   const items = [];
   for (let i = 1; i <= plan.base.bancas; i++) {
     const {units, pop} = plan.totals[i];
     const issues = [];
-    if (!units) issues.push("Vacío");
+    if (!units) issues.push(carve ? "Vacía" : "Vacío");
     if (counts[i] > 1) issues.push(`${number(counts[i])} fragmentos`);
     const diff = plan.quota ? 100 * (pop / plan.quota - 1) : 0;
     if (units && !carve && Math.abs(diff) > 2) issues.push(`Desvío ${diff > 0 ? "+" : ""}${pct(diff)}`);
@@ -739,8 +797,45 @@ function paintReview() {
     items.push(row);
   }
   $("review-issues").replaceChildren(...items);
-  $("review-status").textContent = items.length ? `${number(items.length)} distritos para revisar` :
-    "Todos los distritos tienen un solo fragmento y un desvío de hasta el 2 %.";
+  const entity = carve ? (items.length === 1 ? "provincia" : "provincias") :
+    (items.length === 1 ? "distrito" : "distritos");
+  $("review-status").textContent = items.length ? `${number(items.length)} ${entity} para revisar` :
+    carve ? "Todas las provincias tienen un solo fragmento." :
+      "Todos los distritos tienen un solo fragmento y un desvío de hasta el 2 %.";
+}
+
+function updateLocationList(counts) {
+  if (counts === locatedCounts) return;
+  locatedCounts = counts;
+  map.clearReviewLocation();
+  reviewLocations = plan.reviewLocations();
+  const select = $("fragment-choice");
+  select.replaceChildren(new Option("Elegí una ubicación", ""),
+    ...reviewLocations.map(({district, fragment, host, area}, i) => {
+      const labels = [fragment ? `Fragmento ${number(fragment)}` : "", host ? `Enclave en ${districtName(host)}` : ""];
+      const size = area >= 1e5 ? `${percentage(area / 1e6)} km²` : `${number(area)} m²`;
+      return new Option([districtName(district), ...labels.filter(Boolean), size].join(" · "), i);
+    }));
+  select.disabled = !reviewLocations.length;
+  const fragments = reviewLocations.filter(item => item.fragment).length;
+  const enclaves = reviewLocations.filter(item => item.host).length;
+  $("fragment-location").textContent = reviewLocations.length ?
+    `${number(fragments)} ${fragments === 1 ? "fragmento separado" : "fragmentos separados"} · ${number(enclaves)} ${enclaves === 1 ? "enclave" : "enclaves"}` :
+    "El plan no tiene fragmentos separados ni enclaves en la cartografía cargada.";
+}
+
+function locateReviewSelection() {
+  const value = $("fragment-choice").value;
+  const location = value === "" ? null : reviewLocations[Number(value)];
+  if (!location || switching || map.gesture || !plan || plan.stroke) return;
+  chooseDistrict(location.district);
+  if (view === "unassigned") selectView("assignment");
+  map.locateParts(location);
+  const unit = plan.units[plan.pieceOwners[location.anchor]];
+  const code = plan.base.modo === "radios" ? "Radio" : "Circuito";
+  const department = plan.base.deptos?.[unit[7]];
+  $("fragment-location").textContent = [`${code} ${unit[0]}`, department].filter(Boolean).join(" · ");
+  $("canvas").scrollIntoView({block: "nearest"});
 }
 
 function redraw() {
@@ -755,21 +850,28 @@ function redraw() {
     showHover(map.hoverIndex);
     $("undo").disabled = !plan.history.length || Boolean(plan.stroke);
     $("redo").disabled = !plan.future.length || Boolean(plan.stroke);
+    updateExportPreview();
     map.request();
   });
 }
 
 function setTool(next) {
   if (map.gesture) return;
+  if (view === "export" && next !== "pan") selectView(exportBasis);
   tool = next;
   $("canvas").dataset.tool = next;
   document.querySelectorAll("button[data-tool]").forEach(button => {
     button.setAttribute("aria-pressed", String(button.dataset.tool === next));
   });
+  showHover(map.hoverIndex);
   map.request();
 }
 
-$("group").addEventListener("change", () => map.request());
+$("group").addEventListener("change", () => {
+  brushPreference = $("group").value;
+  showHover(map.hoverIndex);
+  map.request();
+});
 
 function timeTravel(action) {
   if (!plan || plan.stroke || switching) return;
@@ -799,9 +901,9 @@ function saveBlob(blob, filename) {
 }
 
 // Colores de la exportación: los del mapa, siempre sobre papel blanco.
-function exportFill() {
+function exportFill(mode = view === "export" ? exportBasis : view) {
   const empty = "#e6e6e6";
-  if (view === "lean" || view === "unit") {
+  if (mode === "lean" || mode === "unit") {
     const paper = new LeanElectoral(plan, election, {
       paper: "#ffffff", alternate: palette, blank: empty, tie: "#bbbeb8", missing: "#d8e0dd"
     });
@@ -824,18 +926,65 @@ function exportFill() {
   return district => district ? palette[(district - 1) % palette.length] : empty;
 }
 
+function updateExportPreview() {
+  if (view !== "export") {
+    exportPreview = null;
+    map.exportImage = null;
+    return;
+  }
+  const departamentos = $("export-lines").value === "dept";
+  const key = exportKey();
+  if (exportPreview && sameExport(exportPreview.key, key)) return;
+  const preview = {key};
+  exportPreview = preview;
+  map.exportImage = null;
+  $("activity").textContent = "Preparando la vista de exportación…";
+  const current = () => exportPreview === preview && view === "export" && sameExport(key, exportKey());
+  setTimeout(async () => {
+    if (!current()) return;
+    try {
+      preview.svg = exportarPlan({plan, map, fill: exportFill(), departamentos});
+      const image = await loadSvgImage(preview.svg);
+      if (!current()) return;
+      map.exportImage = {image, scale: exportSize / Math.max(plan.base.ancho, plan.base.alto)};
+      $("activity").textContent = "Vista de exportación. Elegí Pintar o Borrar para editar.";
+      map.request();
+    } catch (error) {
+      if (current()) $("activity").textContent = error.message;
+    }
+  }, 20);
+}
+
+function exportKey() {
+  return [plan, plan.componentCounts(), plan.voteRows, election.id, view, exportBasis, $("export-lines").value];
+}
+
+function sameExport(first, second) {
+  return first.every((value, i) => value === second[i]);
+}
+
 async function exportMap(format) {
   if (!plan || plan.stroke || switching || map.gesture) return;
+  const source = plan;
+  const key = exportKey();
+  const departamentos = $("export-lines").value === "dept";
+  const {id, modo, bancas} = source.base;
+  const filename = `distrito257-${id}-${modo}-${bancas}${departamentos ? "-deptos" : ""}.${format}`;
   $("activity").textContent = "Preparando la exportación…";
   await new Promise(resolve => setTimeout(resolve, 30));
+  if (switching || plan.stroke || map.gesture || !sameExport(key, exportKey())) {
+    if (plan === source && !switching) $("activity").textContent = "El mapa cambió antes de exportar. Volvé a intentar.";
+    return;
+  }
   try {
-    const departamentos = $("export-lines").value === "dept";
-    const svg = exportarPlan({plan, map, fill: exportFill(), departamentos});
+    if (view === "export") updateExportPreview();
+    const previewSvg = view === "export" ? exportPreview?.svg : null;
+    const svg = previewSvg ?? exportarPlan({plan, map, fill: exportFill(), departamentos});
     const blob = format === "svg" ? new Blob([svg], {type: "image/svg+xml"}) : await svgToPng(svg);
-    saveBlob(blob, `distrito257-${plan.base.id}-${plan.base.modo}-${plan.base.bancas}${departamentos ? "-deptos" : ""}.${format}`);
-    $("activity").textContent = `Mapa exportado en ${format.toUpperCase()}.`;
+    saveBlob(blob, filename);
+    if (plan === source && !switching) $("activity").textContent = `Mapa exportado en ${format.toUpperCase()}.`;
   } catch (error) {
-    $("activity").textContent = error.message;
+    if (plan === source && !switching) $("activity").textContent = error.message;
   }
 }
 
@@ -898,7 +1047,7 @@ function applySeats() {
   if (!plan) return;
   const wanted = seatsCustom ?? defaultCount(members);
   if (wanted !== plan.base.bancas) load(members, plan.base.modo);
-  else { paintApportion(); setLocation(); redraw(); }
+  else { rememberPlanSize(); paintApportion(); setLocation(); redraw(); }
 }
 
 $("reparto").addEventListener("change", () => {
@@ -930,13 +1079,13 @@ $("camara").addEventListener("change", () => {
 $("seat-count").addEventListener("change", () => {
   const value = Math.round(Number($("seat-count").value));
   if (!plan || !Number.isFinite(value) || value < 1) { if (plan) paintApportion(); return; }
-  seatsCustom = value === defaultSeats(members) ? null : value;
+  seatsCustom = value === defaultCount(members) ? null : value;
   applySeats();
 });
 $("seats").addEventListener("change", () => {
   const value = Math.round(Number($("seats").value));
   if (!plan || !Number.isFinite(value) || value < 1) { if (plan) $("seats").value = plan.base.bancas; return; }
-  seatsCustom = value === defaultSeats(members) ? null : value;
+  seatsCustom = value === defaultCount(members) ? null : value;
   applySeats();
 });
 $("seat-default").addEventListener("click", () => { seatsCustom = null; applySeats(); });
@@ -957,9 +1106,11 @@ $("carve-apply").addEventListener("click", () => {
 // Cambia de jurisdicciones o de modo; si la carga falla, vuelve al estado anterior.
 async function switchTo(ids, carving) {
   if (switching) return;
+  const id = [...new Set(ids)].sort().join("+");
+  if (plan && id === plan.base.id && carving === carve) return;
   const previous = {carve, seatsCustom};
   carve = carving;
-  seatsCustom = null;
+  seatsCustom = visitedPlanSizes.get(planSizeKey(id, carving)) ?? null;
   if (!await load(ids, plan?.base.modo ?? "radios")) ({carve, seatsCustom} = previous);
 }
 $("active-district").addEventListener("change", () => chooseDistrict(Number($("active-district").value)));
@@ -967,7 +1118,7 @@ $("active-district").addEventListener("change", () => chooseDistrict(Number($("a
 $("province").addEventListener("change", () => {
   const ids = $("province").value.split("+");
   if (ids.join("+") === members.join("+")) return;
-  switchTo(ids, carve && ids.length > 1);
+  switchTo(ids, carve);
 });
 $("mode").addEventListener("change", () => load(members, $("mode").value));
 $("radio-source").addEventListener("change", async () => {
@@ -1006,13 +1157,19 @@ $("election").addEventListener("change", () => {
 });
 function selectView(next) {
   if (!plan || !displayModes.has(next)) return;
+  if (map.gesture) { $("map-view").value = view; return; }
+  if (next === "export" && view !== "export") {
+    exportBasis = view === "lean" || view === "unit" ? view : "assignment";
+  }
   view = next;
+  if (view === "export") setTool("pan");
   $("map-view").value = next;
   refreshView();
   setLocation();
   redraw();
 }
 $("map-view").addEventListener("change", () => selectView($("map-view").value));
+$("export-lines").addEventListener("change", redraw);
 document.querySelectorAll("button[data-tool]").forEach(button => {
   button.addEventListener("click", () => setTool(button.dataset.tool));
 });
@@ -1036,6 +1193,14 @@ $("lock-district").addEventListener("click", () => {
 $("plan-review").addEventListener("toggle", () => {
   if (plan) paintReview();
 });
+$("locate-fragments").addEventListener("click", () => {
+  if (!plan || switching || map.gesture || plan.stroke) return;
+  $("fragment-locator").hidden = false;
+  updateLocationList(plan.componentCounts());
+  if (!$("fragment-choice").value && reviewLocations.length) $("fragment-choice").value = "0";
+  locateReviewSelection();
+});
+$("fragment-choice").addEventListener("change", locateReviewSelection);
 $("find-unassigned").addEventListener("click", () => {
   if (!plan || switching || map.gesture || !plan.totals[0].units) return;
   selectView("unassigned");
@@ -1105,6 +1270,8 @@ window.recibirCatalogo = data => {
   if (Number.isInteger(custom) && custom > 0 && custom !== defaultCount(ids)) seatsCustom = custom;
   const requestedView = location.get("vista");
   view = displayModes.has(requestedView) ? requestedView : "assignment";
+  const requestedColor = location.get("colorExport");
+  exportBasis = ["lean", "unit"].includes(requestedColor) ? requestedColor : "assignment";
   voteMethod = location.get("estimacion") === "circuit" ? "circuit" : "geo";
   election = {id: location.get("eleccion")};
   load(ids, mode);

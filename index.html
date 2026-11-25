@@ -24,7 +24,7 @@
     document.documentElement.dataset.theme = ["light", "dark"].includes(storedTheme) ? storedTheme :
       (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
   </script>
-  <link rel="stylesheet" href="estilo.css?v=ac9178a619">
+  <link rel="stylesheet" href="estilo.css?v=b22c65da7d">
 </head>
 <body>
   <div class="shell">
@@ -49,7 +49,7 @@
     <main>
       <section class="controls" aria-label="Configuración del mapa">
         <label>Jurisdicción<select id="province" disabled></select></label>
-        <label>Geografía<select id="mode" disabled>
+        <label>Geografía<select id="mode" title="Cada geografía guarda sus propias asignaciones" disabled>
           <option value="radios">Radios censales 2022</option>
           <option value="circuitos">Circuitos electorales 2025</option>
         </select></label>
@@ -119,6 +119,7 @@
                 <option value="assignment">Asignación</option>
                 <option value="unit">Voto por unidad</option>
                 <option value="lean">Lean del plan</option>
+                <option value="export">Vista de exportación</option>
                 <option value="unassigned">Sin asignar</option>
               </select>
             </label>
@@ -172,7 +173,14 @@
           <details id="plan-review" class="plan-review">
             <summary>Revisar plan <span id="contiguity-overview"></span></summary>
             <p id="contiguity-status" class="result-note"></p>
+            <p class="result-note">Las islas se integran al territorio con la misma asignación que les corresponde por circuito, departamento o provincia de origen.</p>
             <button id="find-unassigned" type="button" disabled>Centrar unidades sin asignar</button>
+            <button id="locate-fragments" type="button" aria-controls="fragment-locator" disabled>Ubicar fragmentos y enclaves</button>
+            <div id="fragment-locator" hidden>
+              <label for="fragment-choice">Ubicación</label>
+              <select id="fragment-choice"></select>
+              <p id="fragment-location" class="result-note" aria-live="polite"></p>
+            </div>
             <p id="review-status" class="result-note"></p>
             <ul id="review-issues"></ul>
           </details>
@@ -203,10 +211,11 @@
 
       <details class="notes">
         <summary>Fuentes, alcance y atajos</summary>
+        <p>Los radios censales pueden ser urbanos, rurales o mixtos. Los circuitos electorales agrupan electores por cercanía de domicilio y la capa de 2025 incluye reconstrucciones cartográficas.</p>
         <p>Radios del Censo 2022, compilados por CONICET. La población por radio cubre viviendas particulares. Los votos por radio se estiman por distancia a los locales dentro de cada departamento, partido o comuna. Para 2025 se usan los votos de octubre por local. Para las dos elecciones de 2023 se reparten los votos por circuito usando los locales de 2025 como referencia. Ante la falta de un local utilizable, se usa un punto representativo del circuito o del departamento.</p>
         <p>La opción Reparto por circuito distribuye en proporción a la población. <a href="control_locales.json">Cobertura y puntos de respaldo por provincia</a> · <a href="control_pba.json">Control de Buenos Aires</a>.</p>
         <p>El modo de circuitos usa población estimada según el padrón y votos observados para Diputados 2025 donde la base tiene cobertura. Para 2023 se usan datos adaptados a los circuitos de 2025.</p>
-        <p>El desvío se destaca cuando supera el 2 %. La contigüidad se comprueba por segmentos de borde compartidos entre polígonos. Las islas separadas cuentan como fragmentos. El pincel de circuito en modo radios usa el vínculo aproximado de la base entre radio y circuito.</p>
+        <p>El desvío se destaca cuando supera el 2 %. La contigüidad usa los bordes o superficies que comparten las piezas. Las islas con circuito propio se identifican con la cartografía del IGN. En modo radios se usa el vínculo aproximado entre radio y circuito de la base.</p>
         <p>El reparto de las bancas sigue la Ley 22.847 con el Censo 2022: un diputado cada 161.000 habitantes o fracción de 80.500, más 3 por distrito, piso de 5 y garantía de las bancas de 1983. Las variantes ajustadas buscan el cociente que deja la Cámara en el total pedido (método de Webster). Cada número de distritos guarda su propio plan; solo el de la base del proyecto arranca con distritos dibujados.</p>
         <p>Exportar SVG y PNG dibuja cada distrito como una sola figura, con el color del mapa (asignación o margen electoral), borde blanco y su número. Los bordes internos se disuelven cancelando los tramos compartidos; las rendijas de menos de unos 20 m entre unidades del mismo distrito, incluido el límite entre jurisdicciones unidas, también.</p>
         <p><kbd>V</kbd> mover, <kbd>P</kbd> pintar, <kbd>E</kbd> borrar, <kbd>Ctrl</kbd> + <kbd>Z</kbd> deshacer. La rueda acerca o aleja y el botón central arrastra el mapa. En pantallas táctiles, dos dedos acercan y mueven el mapa.</p>
@@ -225,13 +234,13 @@
       </div>
     </form>
   </dialog>
-  <script src="plan.js?v=ac9178a619" defer></script>
-  <script src="mapa.js?v=ac9178a619" defer></script>
-  <script src="lean.js?v=ac9178a619" defer></script>
-  <script src="reparto.js?v=ac9178a619" defer></script>
-  <script src="export.js?v=ac9178a619" defer></script>
-  <script src="datos/colores.js?v=ac9178a619" defer></script>
-  <script src="app.js?v=ac9178a619" defer></script>
-  <script src="datos/catalogo.js?v=ac9178a619" defer></script>
+  <script src="plan.js?v=b22c65da7d" defer></script>
+  <script src="mapa.js?v=b22c65da7d" defer></script>
+  <script src="lean.js?v=b22c65da7d" defer></script>
+  <script src="reparto.js?v=b22c65da7d" defer></script>
+  <script src="export.js?v=b22c65da7d" defer></script>
+  <script src="datos/colores.js?v=b22c65da7d" defer></script>
+  <script src="app.js?v=b22c65da7d" defer></script>
+  <script src="datos/catalogo.js?v=b22c65da7d" defer></script>
 </body>
 </html>
