@@ -40,6 +40,12 @@ se enumeran por superficie, después de la pieza principal. Se marca como
 enclave un componente rodeado por una sola asignación distinta, con el
 borde cerrado en las capas seleccionadas.
 
+Dentro de cada jurisdicción también se recuperan bordes paralelos de al
+menos 8 m en la proyección del mapa cuando sus trazados difieren hasta
+25 cm. Los restos de hasta 4 m² en esa proyección se agrupan con una
+pieza mayor de su misma unidad si queda a un metro o menos. Estos
+ajustes operan sobre la revisión y conservan las asignaciones del JSON.
+
 **Color del mapa → Vista de exportación** muestra el mismo dibujo que
 sale en el SVG y el PNG. Conserva el color de la vista que estaba activa
 y el selector **Solo distritos / Con departamentos**. Usá **Mover** y
