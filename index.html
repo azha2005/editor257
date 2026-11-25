@@ -24,7 +24,7 @@
     document.documentElement.dataset.theme = ["light", "dark"].includes(storedTheme) ? storedTheme :
       (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
   </script>
-  <link rel="stylesheet" href="estilo.css?v=3cf1def7bb">
+  <link rel="stylesheet" href="estilo.css?v=83c513e2ab">
 </head>
 <body>
   <div class="shell">
@@ -168,7 +168,14 @@
             <progress id="assigned" max="100" value="0" aria-label="Población asignada"></progress>
             <p id="unassigned">Cargando población…</p>
             <p id="vote-coverage" class="vote-coverage" hidden></p>
-            <div id="seat-summary" class="seat-summary" aria-label="Ganadores de distritos"></div>
+            <section id="seat-summary" class="seat-summary" aria-labelledby="seat-title" hidden>
+              <div class="seat-head">
+                <h3 id="seat-title">Inclinación por fuerza</h3>
+                <span id="seat-total"></span>
+              </div>
+              <div id="seat-bar" class="seat-bar" aria-hidden="true"></div>
+              <ul id="seat-labels" class="seat-labels" role="list"></ul>
+            </section>
           </section>
           <details id="plan-review" class="plan-review">
             <summary>Revisar plan <span id="contiguity-overview"></span></summary>
@@ -234,13 +241,13 @@
       </div>
     </form>
   </dialog>
-  <script src="plan.js?v=3cf1def7bb" defer></script>
-  <script src="mapa.js?v=3cf1def7bb" defer></script>
-  <script src="lean.js?v=3cf1def7bb" defer></script>
-  <script src="reparto.js?v=3cf1def7bb" defer></script>
-  <script src="export.js?v=3cf1def7bb" defer></script>
-  <script src="datos/colores.js?v=3cf1def7bb" defer></script>
-  <script src="app.js?v=3cf1def7bb" defer></script>
-  <script src="datos/catalogo.js?v=3cf1def7bb" defer></script>
+  <script src="plan.js?v=83c513e2ab" defer></script>
+  <script src="mapa.js?v=83c513e2ab" defer></script>
+  <script src="lean.js?v=83c513e2ab" defer></script>
+  <script src="reparto.js?v=83c513e2ab" defer></script>
+  <script src="export.js?v=83c513e2ab" defer></script>
+  <script src="datos/colores.js?v=83c513e2ab" defer></script>
+  <script src="app.js?v=83c513e2ab" defer></script>
+  <script src="datos/catalogo.js?v=83c513e2ab" defer></script>
 </body>
 </html>

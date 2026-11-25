@@ -697,14 +697,51 @@ function paintSummary() {
   } else {
     $("vote-coverage").textContent = "Estimación por radio con reparto por población dentro del circuito.";
   }
-  const wins = new Map();
+  paintSeatSummary();
+}
+
+function paintSeatSummary() {
+  const wins = new Uint32Array(election.partidos.length);
+  let empty = 0, missing = 0, blank = 0, tied = 0;
   for (let district = 1; district <= plan.base.bancas; district++) {
-    if (plan.method === "geo" && plan.totals[district].missing) continue;
-    const winner = plan.results(district, election).winner;
-    if (winner) wins.set(winner.name, (wins.get(winner.name) ?? 0) + 1);
+    const record = plan.totals[district];
+    const result = districtLeader(record, plan.method, election);
+    if (!record.units) empty++;
+    else if (result.missing) missing++;
+    else if (!result.total) blank++;
+    else if (result.winner < 0) tied++;
+    else wins[result.winner]++;
   }
-  const entries = [...wins].sort((a, b) => b[1] - a[1]);
-  $("seat-summary").replaceChildren(...entries.map(([name, seats]) => make("span", `${name} ${seats}`)));
+  const entries = election.partidos.map((name, index) =>
+    [name, wins[index], partyColor(election, index, palette)]).sort((a, b) => b[1] - a[1]);
+  entries.push(
+    ["Empate", tied, color("lean-tie")],
+    ["Cobertura parcial o ausente", missing, color("lean-uncovered")],
+    ["Sin votos", blank, color("unassigned")],
+    [carve ? "Vacías" : "Vacíos", empty, color("rule")],
+  );
+
+  const bar = [], labels = [];
+  for (const [name, count, fill] of entries) {
+    if (!count) continue;
+    const segment = make("span");
+    segment.style.backgroundColor = fill;
+    segment.style.flexGrow = count;
+    segment.title = `${name} · ${number(count)}`;
+    bar.push(segment);
+    const label = make("li");
+    const swatch = make("span", "", "seat-swatch");
+    swatch.setAttribute("aria-hidden", "true");
+    swatch.style.backgroundColor = fill;
+    label.append(swatch, make("span", name), make("strong", number(count)));
+    labels.push(label);
+  }
+  const count = plan.base.bancas;
+  const territory = carve ? (count === 1 ? "provincia" : "provincias") : (count === 1 ? "distrito" : "distritos");
+  $("seat-total").textContent = `${number(count)} ${territory}`;
+  $("seat-bar").replaceChildren(...bar);
+  $("seat-labels").replaceChildren(...labels);
+  $("seat-summary").hidden = false;
 }
 
 function paintInspector() {

@@ -169,8 +169,16 @@ progress::-webkit-progress-bar { background: var(--accent-light); }
 progress::-webkit-progress-value { background: var(--accent); }
 progress::-moz-progress-bar { background: var(--accent); }
 #unassigned, #district-meta, .vote-coverage { color: var(--muted); font-size: 12px; margin: 4px 0; }
-.seat-summary { display: flex; gap: 4px 8px; flex-wrap: wrap; font-size: 12px; margin-top: 8px; }
-.seat-summary span { font-weight: 650; }
+.seat-summary { font-size: 12px; margin-top: 12px; }
+.seat-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.seat-head h3 { margin: 0; font-size: 13px; font-weight: 680; }
+.seat-head span { flex-shrink: 0; color: var(--muted); }
+.seat-bar { display: flex; height: 9px; margin: 5px 0 6px; border: 1px solid var(--rule); border-radius: 4px; overflow: hidden; }
+.seat-bar span { flex: 0 0 0; }
+.seat-labels { display: flex; flex-wrap: wrap; gap: 4px 12px; margin: 0; padding: 0; list-style: none; }
+.seat-labels li { display: flex; align-items: baseline; gap: 4px; max-width: 100%; }
+.seat-labels strong { font-weight: 680; font-variant-numeric: tabular-nums; }
+.seat-swatch { flex: 0 0 8px; height: 8px; border: 1px solid var(--rule); border-radius: 2px; }
 .district-table { border-block-start: 1px solid var(--ink); }
 .pagination { display: flex; align-items: center; justify-content: space-between; padding: 4px 8px; gap: 4px; border-bottom: 1px solid var(--rule); }
 .pagination button, .pagination span { font-size: 12px; }

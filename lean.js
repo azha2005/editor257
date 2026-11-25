@@ -35,6 +35,17 @@ function leaderOf(votes, election) {
   };
 }
 
+function districtLeader(record, method, election) {
+  const result = leaderOf(record.votes, election);
+  if (method === "geo" && record.missing) result.missing = true;
+  return result;
+}
+
+function partyColor(election, index, alternate) {
+  const expected = election.colores?.[index] ?? mapasDeColor[election.id]?.[election.partidos[index]];
+  return /^#[\da-f]{6}$/i.test(expected) ? expected : alternate[index % alternate.length];
+}
+
 function mixWithPaper(hex, paper, strength) {
   const rgb = [1, 3, 5].map(offset => {
     const base = Number.parseInt(hex.slice(offset, offset + 2), 16);
@@ -48,12 +59,10 @@ class LeanElectoral {
   constructor(plan, election, theme) {
     this.election = election;
     this.theme = theme;
-    const published = mapasDeColor[election.id] ?? {};
     const sums = new Float64Array(election.partidos.length);
     const winners = new Uint32Array(election.partidos.length);
     this.parties = election.partidos.map((name, i) => {
-      const expected = election.colores?.[i] ?? published[name];
-      const hex = /^#[\da-f]{6}$/i.test(expected) ? expected : theme.alternate[i % theme.alternate.length];
+      const hex = partyColor(election, i, theme.alternate);
       return {
         name, hex,
         ramp: marginLevels.map(level => mixWithPaper(hex, theme.paper, level.strength)),
@@ -89,9 +98,7 @@ class LeanElectoral {
   }
 
   district(record, method) {
-    const result = leaderOf(record.votes, this.election);
-    if (method === "geo" && record.missing) result.missing = true;
-    return result;
+    return districtLeader(record, method, this.election);
   }
 
   title(result) {
