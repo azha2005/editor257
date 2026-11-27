@@ -24,7 +24,7 @@
     document.documentElement.dataset.theme = ["light", "dark"].includes(storedTheme) ? storedTheme :
       (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
   </script>
-  <link rel="stylesheet" href="estilo.css?v=83c513e2ab">
+  <link rel="stylesheet" href="estilo.css?v=8e6d09643a">
 </head>
 <body>
   <div class="shell">
@@ -123,6 +123,10 @@
                 <option value="unassigned">Sin asignar</option>
               </select>
             </label>
+            <div class="tool-cluster">
+              <button id="department-lines" type="button" aria-pressed="false"
+                title="Límites de departamentos, partidos y comunas (Censo 2022)" disabled>Límites censales</button>
+            </div>
             <label class="tool-cluster mobile-district">Distrito
               <select id="active-district" aria-label="Distrito activo" disabled></select>
             </label>
@@ -241,13 +245,13 @@
       </div>
     </form>
   </dialog>
-  <script src="plan.js?v=83c513e2ab" defer></script>
-  <script src="mapa.js?v=83c513e2ab" defer></script>
-  <script src="lean.js?v=83c513e2ab" defer></script>
-  <script src="reparto.js?v=83c513e2ab" defer></script>
-  <script src="export.js?v=83c513e2ab" defer></script>
-  <script src="datos/colores.js?v=83c513e2ab" defer></script>
-  <script src="app.js?v=83c513e2ab" defer></script>
-  <script src="datos/catalogo.js?v=83c513e2ab" defer></script>
+  <script src="plan.js?v=8e6d09643a" defer></script>
+  <script src="mapa.js?v=8e6d09643a" defer></script>
+  <script src="lean.js?v=8e6d09643a" defer></script>
+  <script src="reparto.js?v=8e6d09643a" defer></script>
+  <script src="export.js?v=8e6d09643a" defer></script>
+  <script src="datos/colores.js?v=8e6d09643a" defer></script>
+  <script src="app.js?v=8e6d09643a" defer></script>
+  <script src="datos/catalogo.js?v=8e6d09643a" defer></script>
 </body>
 </html>

@@ -31,6 +31,8 @@
   --water: #e9eeec;
   --grid: #d5dedac2;
   --boundary: #20282562;
+  --department-line: #bc2830;
+  --department-halo: #fff5ed;
   --hover: #101010;
   --hover-fill: #ffffff36;
   --unassigned: #f8f7ef;
@@ -60,6 +62,8 @@
   --water: #252d2a;
   --grid: #99b0a326;
   --boundary: #16191691;
+  --department-line: #ff7770;
+  --department-halo: #2b1417;
   --hover: #ffffff;
   --unassigned: #62655b;
   --lean-tie: #8b908a;
@@ -125,6 +129,11 @@ a:hover { color: var(--accent); }
 .tool-cluster select { max-width: 160px; padding-inline: 4px; }
 .map-view { font-size: 12px; color: var(--muted); white-space: nowrap; }
 .map-view select { color: var(--ink); font-size: 14px; max-width: 184px; }
+#department-lines { white-space: nowrap; }
+#department-lines::before {
+  content: ""; display: inline-block; width: 12px; margin-right: 6px;
+  border-top: 2px solid var(--department-line); vertical-align: .24em;
+}
 .history { margin-left: auto; }
 .lean-key { padding: 8px 12px; color: var(--muted); background: var(--paper); font-size: 12px; border-bottom: 1px solid var(--rule); }
 .lean-key p { margin-bottom: 4px; }

@@ -14,6 +14,7 @@ const palette = color("districts").split(",").map(item => item.trim());
 function readMapColors() {
   return {
     water: color("water"), grid: color("grid"), boundary: color("boundary"),
+    departmentLine: color("department-line"), departmentHalo: color("department-halo"),
     hover: color("hover"), hoverFill: color("hover-fill"),
     district: district => district ? palette[(district - 1) % palette.length] : color("unassigned")
   };
@@ -224,6 +225,7 @@ function refreshView() {
 
 function setControls(enabled) {
   for (const id of controls) $(id).disabled = !enabled;
+  $("department-lines").disabled = !enabled || view === "export";
   $("radio-source").disabled = !enabled || !plan?.base.geolocalizados;
   $("open").disabled = !enabled;
   $("lock-district").disabled = !enabled;
@@ -281,6 +283,25 @@ function saveChange(message) {
 window.recibirBase = base => pending.get(`${base.id}-${base.modo}`)?.(base);
 window.recibirLocales = atlas => pending.get(`${atlas.id}-locales`)?.(atlas);
 window.recibirFronteras = data => pending.get(`fronteras-${data.modo}`)?.(data);
+window.recibirLimitesCensales = data => pending.get("limites-censales")?.(data);
+
+let departmentRequest;
+$("department-lines").addEventListener("click", async event => {
+  const button = event.currentTarget;
+  map.showDepartments = button.getAttribute("aria-pressed") !== "true";
+  button.setAttribute("aria-pressed", String(map.showDepartments));
+  if (map.showDepartments && !map.departmentBoundaries) {
+    try {
+      map.departmentBoundaries = await (departmentRequest ??= getScript("limites-censales"));
+    } catch (error) {
+      departmentRequest = null;
+      map.showDepartments = false;
+      button.setAttribute("aria-pressed", "false");
+      $("activity").textContent = error.message;
+    }
+  }
+  map.request();
+});
 
 async function getBase(id, mode) {
   const key = `${id}-${mode}`;
@@ -1201,6 +1222,7 @@ function selectView(next) {
   view = next;
   if (view === "export") setTool("pan");
   $("map-view").value = next;
+  $("department-lines").disabled = switching || view === "export";
   refreshView();
   setLocation();
   redraw();

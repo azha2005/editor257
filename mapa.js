@@ -42,6 +42,7 @@ class MapaDistritos {
 
   show(plan) {
     this.plan = plan;
+    this.departmentPaths = null;
     this.exportImage = null;
     this.reviewAnchor = null;
     this.partBounds = new Map((plan.base.cajasPartes ?? []).map(([id, ...box]) => [id, box]));
@@ -261,6 +262,9 @@ class MapaDistritos {
       for (const path of paths) ctx.stroke(path);
       ctx.globalAlpha = 1;
     }
+    if (!color.preview && this.showDepartments && this.departmentBoundaries) {
+      this.drawDepartments(color);
+    }
     if (this.hoverIndex >= 0) {
       const hover = this.hoverPath();
       ctx.fillStyle = color.hoverFill;
@@ -277,6 +281,44 @@ class MapaDistritos {
       ctx.stroke(hover);
       ctx.restore();
     }
+  }
+
+  drawDepartments(color) {
+    if (!this.departmentPaths) {
+      const {origen: [left, top], miembros} = this.plan.base;
+      const selected = new Set(miembros.map(member => member.id));
+      const paths = [];
+      for (const [ids, lines] of this.departmentBoundaries) {
+        if (!ids.every(id => selected.has(id))) continue;
+        let vertices = 0;
+        for (const line of lines) {
+          if (!vertices || vertices + line.length / 2 > pathBatchVertices) {
+            paths.push(new Path2D());
+            vertices = 0;
+          }
+          const path = paths.at(-1);
+          let x = line[0] - left, y = top - line[1];
+          path.moveTo(x, y);
+          for (let i = 2; i < line.length; i += 2) {
+            x += line[i];
+            y -= line[i + 1];
+            path.lineTo(x, y);
+          }
+          vertices += line.length / 2;
+        }
+      }
+      this.departmentPaths = paths;
+    }
+    const ctx = this.ctx;
+    ctx.save();
+    ctx.lineCap = "round";
+    ctx.strokeStyle = color.departmentHalo;
+    ctx.lineWidth = 3 / this.camera.z;
+    for (const path of this.departmentPaths) ctx.stroke(path);
+    ctx.strokeStyle = color.departmentLine;
+    ctx.lineWidth = 1.5 / this.camera.z;
+    for (const path of this.departmentPaths) ctx.stroke(path);
+    ctx.restore();
   }
 
   drawReviewMarker(color) {

@@ -20,6 +20,11 @@ primero. El mapa, las cifras y el editor funcionan sin conexión y sin servidor.
 4. El editor intenta guardar el trabajo en el navegador. Usá **Guardar plan**
    para descargar una copia en JSON y **Abrir plan** para recuperarla.
 
+**Límites censales** superpone en rojo los bordes compartidos por departamentos,
+partidos y comunas del Censo 2022. Podés activarlos mientras pintás sobre radios
+o circuitos, también en jurisdicciones unidas. La línea sigue la cartografía
+censal y puede cruzar un circuito electoral.
+
 **Bloquear**, en la ficha del distrito, protege sus unidades y evita que
 se le agreguen otras. El pincel, el borrador y el reinicio respetan los
 bloqueos. Si deshacer, rehacer o abrir un archivo cambiara un distrito
@@ -196,8 +201,8 @@ las cuentas conservan todos los identificadores, población y votos fuente.
 
 Para regenerar desde el paquete de QGIS, ejecutá `construir.py` con el Python
 de Mosaic. El constructor escribe la carpeta `outputs/editor_uninominal` y su
-ZIP. Con `--con-datos-existentes` vuelve a empaquetar la interfaz sin recalcular
-la geometría, y actualiza las estimaciones desde
+ZIP. Con `--con-datos-existentes` vuelve a empaquetar la interfaz y los límites
+censales sin recalcular los radios ni los circuitos, y actualiza las estimaciones desde
 `mapas/mapaAMBA2025radios/asignacion_idw.pkl`,
 `mapas/serieAMBA2005_2023radios/asignacion_2023pres.pkl` y
 `mapas/serieAMBA2005_2023radios/asignacion_2023bal.pkl`.
